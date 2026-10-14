@@ -8,6 +8,14 @@
 
 ![猫档案](docs/screenshots/U07.png)
 
+拖入音频文件直接推理（门卫过滤 + 10 类投票，ONNX）：
+
+![命令行推理](docs/screenshots/cli_infer_pain.png)
+
+验证集 10 类叫声的嵌入空间（t-SNE，各色为一类，分开成簇说明模型区分得开）：
+
+![t-SNE](docs/screenshots/tsne_10class.png)
+
 物联网工程专业的毕业设计延伸出来的创业项目，训练、后端、前端都是自己做着学的。模型权重和数据集没有放进仓库，训练脚本里的数据路径需要自己配。
 
 ## 目录
