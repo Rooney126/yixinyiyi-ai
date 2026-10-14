@@ -12,7 +12,7 @@
 
 ![命令行推理](docs/screenshots/cli_infer_pain.png)
 
-验证集 10 类叫声的嵌入空间（t-SNE，各色为一类，分开成簇说明模型区分得开）：
+验证集 10 类叫声的嵌入空间（t-SNE，每格一类：彩色为该类样本，灰色为其余类；簇分得开说明模型区分得开）：
 
 ![t-SNE](docs/screenshots/tsne_10class.png)
 
