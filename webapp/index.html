@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#10141b">
+<title>我家猫今天怎么样 · 译芯怡意</title>
+<style>
+:root{
+  --bg:#10141b;
+  --card:#1a2029;
+  --card2:#222a35;
+  --line:#2c3644;
+  --text:#e8ecf1;
+  --muted:#98a2b0;
+  --accent:#8fd3b6;
+  --neg:#f0937f;
+  --ok:#6fd39a;
+  --warn:#f5c66b;
+  --danger:#ff7a6c;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+/* 显式 display 会盖过 hidden 属性的 UA 样式，这里强制兜底（口令门/看板切换依赖它） */
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;
+  background:var(--bg);color:var(--text);line-height:1.5;
+  min-height:100vh;overflow-x:hidden;
+}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer;touch-action:manipulation}
+button:disabled{opacity:.6;cursor:default}
+
+/* ── 口令门 ── */
+.gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.gate-box{width:100%;max-width:360px;text-align:center}
+.gate-logo{font-size:56px;line-height:1;margin-bottom:10px}
+.gate h1{font-size:22px}
+.gate-sub{color:var(--muted);font-size:13px;margin:4px 0 26px}
+#gate-key{width:100%;height:48px;border-radius:12px;border:1px solid var(--line);
+  background:var(--card);color:var(--text);padding:0 14px;font-size:16px;outline:none}
+#gate-key:focus{border-color:var(--accent)}
+.btn-primary{width:100%;height:48px;margin-top:12px;border-radius:12px;
+  background:var(--accent);color:#12241c;font-size:16px;font-weight:600}
+.gate-hint{color:var(--muted);font-size:12px;margin-top:16px;line-height:1.8}
+.gate-msg{margin-top:14px;color:var(--danger);font-size:14px;font-weight:500;min-height:1em}
+.btn-link{color:var(--accent);text-decoration:underline;margin-left:6px;font-size:inherit}
+
+/* ── 主看板 ── */
+.wrap{max-width:720px;margin:0 auto;padding:14px 14px calc(24px + env(safe-area-inset-bottom))}
+.top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;padding-top:4px}
+.title{font-size:20px}
+.subtitle{color:var(--muted);font-size:12px;margin-top:2px}
+.top-actions{display:flex;gap:6px}
+.icon-btn{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;
+  font-size:18px;background:var(--card);border:1px solid var(--line)}
+.icon-btn.spin{animation:spin .9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* 猫切换器 */
+.chips{display:flex;gap:8px;overflow-x:auto;padding:12px 2px 4px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chips .empty,.chips .error-box{flex:1}
+.chip{flex:0 0 auto;max-width:160px;height:44px;padding:0 16px;border-radius:999px;border:1px solid var(--line);
+  background:var(--card);color:var(--text);font-size:14px;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.chip[aria-pressed="true"]{border-color:transparent;font-weight:600}
+.chip-name{overflow:hidden;text-overflow:ellipsis}
+
+/* 卡片分区 */
+.card{background:var(--card);border-radius:16px;padding:14px 14px 16px;margin-top:12px}
+.card h2{font-size:15px;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.h2-sub{color:var(--muted);font-size:12px;font-weight:400}
+.sec-body{margin-top:10px}
+
+/* 健康概览 */
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tile{background:var(--card2);border-radius:12px;padding:12px}
+.tile .num{font-size:26px;font-weight:700;color:var(--neg)}
+.tile .num small{font-size:13px;font-weight:400;color:var(--muted)}
+.tile .lbl{font-size:12px;color:var(--muted);margin-top:2px}
+.health-cap{margin-top:10px;font-size:12px;color:var(--muted)}
+
+/* 时间线 */
+.tl-item{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.tl-item:last-of-type{border-bottom:none}
+.tl-emoji{width:38px;height:38px;flex:0 0 38px;border-radius:50%;background:var(--card2);
+  display:flex;align-items:center;justify-content:center;font-size:20px}
+.tl-main{flex:1;min-width:0}
+.tl-l1{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.tl-time{color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
+.tl-state{font-size:14px;font-weight:600}
+.tl-conf{margin-left:auto;color:var(--muted);font-size:12px;flex:0 0 auto}
+.tl-conf.hi{color:var(--ok)}
+.tl-conf.lo{color:var(--warn)}
+.tl-quote{font-size:13px;margin-top:2px;opacity:.88;word-break:break-word}
+.tl-tag{font-size:11px;color:var(--warn);border:1px solid var(--warn);border-radius:6px;
+  padding:0 5px;font-weight:400}
+
+/* 设备状态 */
+.dev{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-top:10px}
+.dev:first-of-type{margin-top:0}
+.dev-l1{display:flex;align-items:center;gap:8px}
+.dev-name{font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.badge{flex:0 0 auto;margin-left:auto;font-size:12px;font-weight:600;border-radius:999px;padding:3px 10px}
+.badge-online{background:rgba(111,211,154,.15);color:var(--ok)}
+.badge-sleep{background:rgba(245,198,107,.15);color:var(--warn)}
+.badge-offline{background:rgba(255,122,108,.15);color:var(--danger)}
+.dev-l2{margin-top:6px;font-size:13px}
+.dev-l3{margin-top:4px;font-size:12px;color:var(--muted)}
+.fence{margin-top:8px;border-radius:8px;padding:7px 10px;font-size:13px;font-weight:600;
+  background:rgba(255,122,108,.14);color:#ffb4aa;border:1px solid rgba(255,122,108,.35)}
+
+/* 近 7 日趋势（纯 CSS/JS + 内联 SVG，无图表库） */
+.chart-plot{position:relative;height:130px}
+.bar-area{position:absolute;left:0;right:0;bottom:0;height:110px;display:flex}
+.bar-col{flex:1;position:relative;display:flex;align-items:flex-end;justify-content:center;min-width:0}
+.bar{width:min(38px,62%);border-radius:6px 6px 2px 2px;background:var(--accent);min-height:2px}
+.bar-val{position:absolute;left:0;right:0;text-align:center;font-size:11px;color:var(--muted);line-height:1.2}
+.chart-svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.chart-x{display:flex;margin-top:6px}
+.chart-x span{flex:1;text-align:center;font-size:11px;color:var(--muted)}
+.legend{display:flex;gap:16px;margin-top:10px;font-size:12px;color:var(--muted)}
+.lg-item{display:flex;align-items:center;gap:5px}
+.dot{display:inline-block;width:9px;height:9px;border-radius:3px}
+.dot.total{background:var(--accent)}
+.dot.neg{background:var(--neg);border-radius:50%}
+
+/* 通用状态 */
+.empty{padding:18px 6px;text-align:center;color:var(--muted);font-size:13px;line-height:1.8}
+.error-box{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+  background:rgba(255,122,108,.08);border:1px dashed rgba(255,122,108,.4);border-radius:10px;
+  padding:10px 12px;font-size:13px}
+.btn-retry{flex:0 0 auto;height:36px;padding:0 14px;border-radius:8px;background:var(--card2);
+  border:1px solid var(--line);font-size:13px}
+.skel{height:14px;border-radius:6px;
+  background:linear-gradient(90deg,var(--card2) 25%,#2b3542 50%,var(--card2) 75%);
+  background-size:200% 100%;animation:shimmer 1.2s infinite;margin:10px 0}
+@keyframes shimmer{to{background-position:-200% 0}}
+.foot{margin-top:20px;color:var(--muted);font-size:12px;text-align:center;line-height:1.8}
+
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<noscript><p style="padding:24px;text-align:center">看板需要启用 JavaScript 才能使用。</p></noscript>
+
+<!-- ① 口令门：首访输入，验证通过后存 localStorage 免输 -->
+<div id="gate" class="gate">
+  <div class="gate-box">
+    <div class="gate-logo">🐱</div>
+    <h1>我家猫今天怎么样</h1>
+    <p class="gate-sub">译芯怡意 · 家庭健康看板</p>
+    <form id="gate-form">
+      <input id="gate-key" type="password" autocomplete="off" autocapitalize="off"
+             spellcheck="false" placeholder="🔑 请输入访问口令" aria-label="访问口令">
+      <button type="submit" class="btn-primary" id="gate-btn">进 入</button>
+    </form>
+    <p class="gate-hint">口令由管理员提供，与数据看板同一套。<br>验证通过后保存在本机，之后免输。</p>
+    <p id="gate-msg" class="gate-msg" role="alert" aria-live="polite" hidden></p>
+  </div>
+</div>
+
+<!-- ② 主看板：移动优先，桌面居中限宽 720px -->
+<main id="board" hidden>
+  <div class="wrap">
+    <header class="top">
+      <div>
+        <h1 class="title">我家猫今天怎么样</h1>
+        <p class="subtitle" id="updated-at"></p>
+      </div>
+      <div class="top-actions">
+        <button id="btn-refresh" class="icon-btn" aria-label="刷新数据" title="刷新">🔄</button>
+        <button id="btn-rekey" class="icon-btn" aria-label="重新输入口令" title="重输口令">⚙️</button>
+      </div>
+    </header>
+
+    <!-- ③ 猫切换器 -->
+    <section aria-label="选择猫">
+      <div id="chips" class="chips"></div>
+    </section>
+
+    <!-- ④ 健康概览卡 -->
+    <section class="card">
+      <h2>健康概览 <span class="h2-sub" id="health-cat"></span></h2>
+      <div id="health-body" class="sec-body"></div>
+    </section>
+
+    <!-- ⑤ 今日情绪时间线 -->
+    <section class="card">
+      <h2>今日情绪时间线 <span class="h2-sub" id="tl-count"></span></h2>
+      <div id="timeline-body" class="sec-body"></div>
+    </section>
+
+    <!-- ⑥ 设备状态条 -->
+    <section class="card">
+      <h2>设备状态 <span class="h2-sub" id="dev-count"></span></h2>
+      <div id="devices-body" class="sec-body"></div>
+    </section>
+
+    <!-- ⑦ 近 7 日趋势 -->
+    <section class="card">
+      <h2>近 7 日趋势</h2>
+      <div id="trend-body" class="sec-body"></div>
+    </section>
+
+    <footer class="foot">
+      <p>数据来自猫叫识别设备，情绪解读仅供参考；异常持续请咨询兽医。</p>
+      <p id="foot-note">设备状态每 60 秒自动刷新（切后台暂停）</p>
+    </footer>
+  </div>
+</main>
+
+<script>
+(() => {
+'use strict';
+
+/* ── 映射表：抄自 cloud_server.py（DOME_MAP / PAIN_HAPPY_FUZZY / NEGATIVE_LABELS），勿改口径 ── */
+const DOME_MAP = {
+  Angry:       ["😡", "现在很火大", "我讨厌这样！不要这样！", "生气"],
+  Defence:     ["😰", "现在很紧张", "退后！别靠近！", "防御"],
+  Fighting:    ["💥", "充满敌意", "要打是吗？来啊！", "战斗"],
+  Warning:     ["⚠️", "正在划边界", "再走一步试试？", "警告"],
+  Happy:       ["😊", "它很开心", "嘿嘿～好开心！陪我玩嘛～", "开心"],
+  Resting:     ["😌", "非常满足", "呼噜呼噜～好舒服～", "满足"],
+  HuntingMind: ["🎯", "发现了猎物", "别吵！我看到猎物了！", "狩猎之心"],
+  Mating:      ["📞", "想恋爱了", "好想谈恋爱～噢～越想越难耐～", "发情"],
+  MotherCall:  ["🥺", "在找妈妈", "妈妈！你在哪呀？", "寻找妈妈"],
+  Paining:     ["😭", "可能不舒服", "呜…我难受…", "疼痛"]
+};
+const FUZZY_INFO = ["😶", "不太确定", "听起来又像不舒服又像开心", "不确定"];
+const NEG_LABELS = new Set(["Angry", "Defence", "Fighting", "Warning", "Paining"]);
+/* 项圈运动态五态中文（stations.motion_state，2026-10-04） */
+const MOTION_MAP = {
+  resting: ["😴", "静卧"], walking: ["🚶", "行走"], running: ["🏃", "奔跑"],
+  jumping: ["🐾", "跳跃"], impact: ["💥", "碰撞"]
+};
+
+/* ── 常量与状态 ── */
+const KEY_STORE = "yxy_userboard_key";
+const ONLINE_MS = 2 * 60 * 1000;    // 在线：心跳距今 < 2min（与后端 STATION_ONLINE_MS 一致）
+const SLEEP_MS = 35 * 60 * 1000;    // 休眠：2~35min（深睡设备）；更久=离线
+const FETCH_TIMEOUT = 10000;
+const state = { key: "", cats: [], catId: null, stats: null, statsSeq: 0, tlSeq: 0 };
+
+const $ = (id) => document.getElementById(id);
+const BODIES = { health: $("health-body"), timeline: $("timeline-body"),
+                 devices: $("devices-body"), trend: $("trend-body") };
+
+function el(tag, cls, text) {
+  const n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (text != null) n.textContent = text;
+  return n;
+}
+const pad2 = (n) => (n < 10 ? "0" + n : "" + n);
+function fmtTime(ms) { const d = new Date(ms); return pad2(d.getHours()) + ":" + pad2(d.getMinutes()); }
+function fmtDT(ms) { const d = new Date(ms); return (d.getMonth() + 1) + "月" + d.getDate() + "日 " + fmtTime(ms); }
+function dayKey(ms) { const d = new Date(ms); return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate()); }
+function relTime(ms, now) {
+  const s = Math.max(0, Math.round((now - ms) / 1000));
+  if (s < 60) return "刚刚";
+  if (s < 3600) return Math.floor(s / 60) + " 分钟前";
+  if (s < 86400) return Math.floor(s / 3600) + " 小时前";
+  if (s < 172800) return "昨天 " + fmtTime(ms);
+  return fmtDT(ms);
+}
+
+/* ── 请求：相对路径 /api/...，统一超时；错误带状态码供分区处理 ── */
+class ApiError extends Error {
+  constructor(status, message) { super(message); this.status = status; }
+}
+async function api(path, opts) {
+  const timeout = (opts && opts.timeout) || FETCH_TIMEOUT;
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeout);
+  let res;
+  try {
+    res = await fetch(path, { signal: ctrl.signal });
+  } catch (e) {
+    throw new ApiError(0, "网络异常或超时");
+  } finally {
+    clearTimeout(timer);
+  }
+  let data = null;
+  try { data = await res.json(); } catch (e) { /* 非 JSON 按状态码报错 */ }
+  if (!res.ok) throw new ApiError(res.status, (data && data.error) || ("HTTP " + res.status));
+  return data;
+}
+/* 口令以 ?key= 传输（与后端 /stats、/api/station/* 校验方式一致） */
+function apiWithKey(path, opts) {
+  return api(path + (path.includes("?") ? "&" : "?") + "key=" + encodeURIComponent(state.key), opts);
+}
+
+/* ── 分区通用状态：加载/空/错误占位，任何情况下不白屏 ── */
+function showLoading(box, rows) {
+  box.textContent = "";
+  const widths = ["92%", "74%", "85%", "62%"];
+  for (let i = 0; i < (rows || 3); i++) {
+    const s = el("div", "skel");
+    s.style.width = widths[i % widths.length];
+    box.append(s);
+  }
+}
+function showEmpty(box, text) { box.textContent = ""; box.append(el("div", "empty", text)); }
+function showError(box, message, onRetry) {
+  box.textContent = "";
+  const b = el("div", "error-box");
+  b.append(el("span", null, "加载失败：" + message));
+  const btn = el("button", "btn-retry", "重试");
+  btn.type = "button";
+  btn.addEventListener("click", onRetry);
+  b.append(btn);
+  box.append(b);
+}
+
+/* ── 口令门 ── */
+function setGateMsg(text, retryFn) {
+  const m = $("gate-msg");
+  m.textContent = "";
+  if (!text) { m.hidden = true; return; }
+  m.hidden = false;
+  m.append(document.createTextNode(text));
+  if (retryFn) {
+    const btn = el("button", "btn-link", "重试");
+    btn.type = "button";
+    btn.addEventListener("click", retryFn);
+    m.append(btn);
+  }
+}
+async function tryKey(key, saving) {
+  setGateMsg("正在验证口令…");
+  $("gate-btn").disabled = true;
+  try {
+    /* 口令探测用 /stats（与 /api/station/* 同一 STATS_KEY，且新旧后端都存在；
+       200 返回 HTML，api() 里 JSON 解析失败不影响状态码判断） */
+    await api("/stats?key=" + encodeURIComponent(key));
+  } catch (e) {
+    $("gate-btn").disabled = false;
+    if (e.status === 403) setGateMsg("口令错误，请检查后重试");
+    else setGateMsg("网络异常：" + e.message, () => tryKey(key, saving));
+    return;
+  }
+  $("gate-btn").disabled = false;
+  setGateMsg("");
+  state.key = key;
+  if (saving) { try { localStorage.setItem(KEY_STORE, key); } catch (e) { /* 隐私模式等：本次会话内仍可用 */ } }
+  enterBoard();
+}
+$("gate-form").addEventListener("submit", (ev) => {
+  ev.preventDefault();
+  const key = $("gate-key").value.trim();
+  if (!key) { setGateMsg("请输入访问口令"); return; }
+  tryKey(key, true);
+});
+
+let devTimer = null;
+function enterBoard() {
+  $("gate").hidden = true;
+  $("board").hidden = false;
+  Object.values(BODIES).forEach((b) => showLoading(b, 2));
+  startAutoRefresh();
+  refreshAll();
+}
+function exitToGate(msg) {
+  stopAutoRefresh();
+  try { localStorage.removeItem(KEY_STORE); } catch (e) {}
+  state.key = "";
+  $("board").hidden = true;
+  $("gate").hidden = false;
+  $("gate-key").value = "";
+  setGateMsg(msg);
+}
+function startAutoRefresh() {
+  stopAutoRefresh();
+  devTimer = setInterval(() => { if (!document.hidden && state.key) loadDevices(true); }, 60000);
+}
+function stopAutoRefresh() { if (devTimer) { clearInterval(devTimer); devTimer = null; } }
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden && state.key && !$("board").hidden) loadDevices(true);
+});
+
+/* ── 全量刷新（🔄）：猫档案→当前猫两区，设备独立 ── */
+function spin(on) { $("btn-refresh").classList.toggle("spin", on); }
+async function refreshAll() {
+  spin(true);
+  try { await Promise.allSettled([loadCats(), loadDevices()]); }
+  finally { spin(false); }
+  $("updated-at").textContent = "更新于 " + fmtTime(Date.now());
+}
+$("btn-refresh").addEventListener("click", refreshAll);
+$("btn-rekey").addEventListener("click", () => {
+  if (confirm("确定要重新输入口令吗？")) exitToGate("请重新输入口令");
+});
+
+/* ── 猫切换器 ── */
+async function loadCats() {
+  const chips = $("chips");
+  chips.textContent = "";
+  chips.append(el("div", "empty", "正在加载猫档案…"));
+  try {
+    const data = await api("/api/cats");
+    state.cats = data.cats || [];
+  } catch (e) {
+    state.catId = null;
+    $("health-cat").textContent = "";
+    $("tl-count").textContent = "";
+    chips.textContent = "";
+    const b = el("div", "error-box");
+    b.append(el("span", null, "猫档案加载失败：" + e.message));
+    const btn = el("button", "btn-retry", "重试");
+    btn.type = "button";
+    btn.addEventListener("click", loadCats);
+    b.append(btn);
+    chips.append(b);
+    showError(BODIES.health, "还没有猫数据", loadCats);
+    showError(BODIES.timeline, "还没有猫数据", loadCats);
+    showError(BODIES.trend, "还没有猫数据", loadCats);
+    return;
+  }
+  if (!state.cats.length) {
+    state.catId = null;
+    chips.textContent = "";
+    chips.append(el("div", "empty", "还没有猫档案，请先在主站为猫建档 🐱"));
+    showEmpty(BODIES.health, "暂无猫数据");
+    showEmpty(BODIES.timeline, "暂无猫数据");
+    showEmpty(BODIES.trend, "暂无猫数据");
+    return;
+  }
+  const target = state.cats.find((c) => c.id === state.catId) || state.cats[0]; // 默认第一只（建档最早）
+  selectCat(target.id);
+}
+function renderChips() {
+  const chips = $("chips");
+  chips.textContent = "";
+  state.cats.forEach((c) => {
+    const b = el("button", "chip");
+    b.type = "button";
+    const sel = c.id === state.catId;
+    b.setAttribute("aria-pressed", String(sel));
+    b.title = (c.record_count != null ? c.record_count + " 条记录" : c.name);
+    b.append(document.createTextNode((c.emoji || "🐱") + " "), el("span", "chip-name", c.name));
+    if (sel && /^#[0-9a-fA-F]{6}$/.test(c.color || "")) {
+      b.style.background = c.color;   // 站点柔和色板作选中底色，深色文字保证对比度
+      b.style.color = "#14231d";
+    }
+    b.addEventListener("click", () => { if (c.id !== state.catId) selectCat(c.id); });
+    chips.append(b);
+  });
+  const sel = chips.querySelector('[aria-pressed="true"]');
+  if (sel) sel.scrollIntoView({ block: "nearest", inline: "center" });
+}
+function selectCat(id) {
+  state.catId = id;
+  renderChips();
+  const cat = state.cats.find((c) => c.id === id);
+  $("health-cat").textContent = cat ? "· " + cat.name : "";
+  loadStats();
+  loadTimeline();
+}
+
+/* ── 健康概览 + 近 7 日趋势（同一次 /stats 请求） ── */
+async function loadStats() {
+  if (!state.catId) return;
+  const seq = ++state.statsSeq;
+  showLoading(BODIES.health, 2);
+  showLoading(BODIES.trend, 2);
+  try {
+    const data = await api("/api/cats/" + encodeURIComponent(state.catId) + "/stats?days=7");
+    if (seq !== state.statsSeq) return;
+    state.stats = data;
+    renderHealth(data);
+    renderTrend(data);
+  } catch (e) {
+    if (seq !== state.statsSeq) return;
+    showError(BODIES.health, e.message, loadStats);
+    showError(BODIES.trend, e.message, loadStats);
+  }
+}
+function renderHealth(stats) {
+  const box = BODIES.health;
+  box.textContent = "";
+  const daily = stats.daily || [];
+  const today = daily.find((d) => d.date === dayKey(Date.now())) || daily[daily.length - 1] || {};
+  const t1 = el("div", "tile");
+  const n1 = el("div", "num");
+  n1.append(String(today.negative || 0), el("small", null, " 次"));
+  t1.append(n1, el("div", "lbl", "今日健康相关事件"));
+  const t2 = el("div", "tile");
+  const n2 = el("div", "num");
+  n2.append(String(stats.negative_count != null ? stats.negative_count : 0), el("small", null, " 次"));
+  t2.append(n2, el("div", "lbl", "近 7 日健康相关事件"));
+  const tiles = el("div", "tiles");
+  tiles.append(t1, t2);
+  box.append(tiles);
+  box.append(el("div", "health-cap",
+    "口径：生气/防御/战斗/警告/疼痛 ｜ 今日识别 " + (today.total || 0) +
+    " 次 · 近 7 日识别 " + (stats.total != null ? stats.total : 0) + " 次"));
+}
+
+/* ── 今日情绪时间线 ── */
+async function loadTimeline() {
+  if (!state.catId) return;
+  const seq = ++state.tlSeq;
+  showLoading(BODIES.timeline, 4);
+  try {
+    const data = await api("/api/cats/" + encodeURIComponent(state.catId) + "/records?days=1&limit=200");
+    if (seq !== state.tlSeq) return;
+    const midnight = new Date(); midnight.setHours(0, 0, 0, 0);
+    const todays = (data.records || []).filter((r) => r.created_at >= midnight.getTime());
+    renderTimeline(todays, !!data.has_more && todays.length >= 200);
+  } catch (e) {
+    if (seq !== state.tlSeq) return;
+    showError(BODIES.timeline, e.message, loadTimeline);
+  }
+}
+/* 库里已存 emoji/state/translation（含模糊态文案），空字段时回落到内嵌映射 */
+function recordDisplay(r) {
+  const m = DOME_MAP[r.label];
+  const fuzzy = !!r.fuzzy;
+  return {
+    emoji: r.emoji || (fuzzy ? FUZZY_INFO[0] : (m ? m[0] : "❓")),
+    state: r.state || (fuzzy ? FUZZY_INFO[3] : (m ? m[3] : "未知")),
+    quote: r.translation || (fuzzy ? FUZZY_INFO[2] : (m ? m[2] : ""))
+  };
+}
+function renderTimeline(records, truncated) {
+  const box = BODIES.timeline;
+  box.textContent = "";
+  $("tl-count").textContent = records.length ? "· " + records.length + " 条" : "";
+  if (!records.length) { showEmpty(box, "今天还没听到猫叫 🌙"); return; }
+  records.forEach((r) => {
+    const d = recordDisplay(r);
+    const item = el("div", "tl-item");
+    item.append(el("div", "tl-emoji", d.emoji));
+    const main = el("div", "tl-main");
+    const l1 = el("div", "tl-l1");
+    l1.append(el("span", "tl-time", fmtTime(r.created_at)));
+    l1.append(el("span", "tl-state", d.state));
+    if (r.fuzzy) l1.append(el("span", "tl-tag", "模糊态"));
+    const conf = Math.round((r.confidence || 0) * 100);
+    l1.append(el("span", "tl-conf" + (conf >= 80 ? " hi" : conf < 50 ? " lo" : ""), conf + "% 置信"));
+    main.append(l1);
+    if (d.quote) main.append(el("div", "tl-quote", "“" + d.quote + "”"));
+    item.append(main);
+    box.append(item);
+  });
+  if (truncated) box.append(el("div", "empty", "今天记录较多，仅显示最近 200 条"));
+}
+
+/* ── 设备状态条 ── */
+async function loadDevices(silent) {
+  const box = BODIES.devices;
+  if (!silent) showLoading(box, 3);
+  try {
+    const data = await apiWithKey("/api/station/status");
+    renderDevices(data);
+  } catch (e) {
+    if (e.status === 403) { exitToGate("口令已失效，请重新输入"); return; }
+    /* 静默刷新失败且已有旧数据：保留旧内容不打扰；否则显示错误占位 */
+    if (!silent || !box.querySelector(".dev")) showError(box, e.message, () => loadDevices(false));
+  }
+}
+function renderDevices(data) {
+  const box = BODIES.devices;
+  box.textContent = "";
+  const list = data.devices || [];
+  const now = data.server_time || Date.now();   // 用服务器时钟算三态，防手机时钟不准
+  $("dev-count").textContent = list.length ? "· " + list.length + " 台" : "";
+  if (!list.length) { showEmpty(box, "暂无设备上报"); return; }
+  list.forEach((d) => {
+    const age = now - d.last_seen;
+    const st = age < ONLINE_MS ? "online" : age < SLEEP_MS ? "sleep" : "offline";
+    const card = el("div", "dev");
+    const l1 = el("div", "dev-l1");
+    l1.append(el("span", "dev-name", d.name || d.device_uid));
+    const badge = el("span", "badge badge-" + st,
+      st === "online" ? "🟢 在线" : st === "sleep" ? "🟡 休眠" : "🔴 离线");
+    badge.title = st === "online" ? "2 分钟内有心跳"
+      : st === "sleep" ? "深睡设备，心跳间隔较长（35 分钟内有过心跳）"
+      : "超过 35 分钟没有心跳";
+    l1.append(badge);
+    card.append(l1);
+    const segs = [];
+    segs.push(d.battery != null ? "🔋" + Math.round(d.battery * 100) + "%" + (d.charging === 1 ? "⚡" : "") : "🔋—");
+    const mo = MOTION_MAP[d.motion_state];
+    segs.push(mo ? mo[0] + mo[1] : "运动态 —");
+    segs.push("今日 " + (d.today_count != null ? d.today_count : 0) + " 次");
+    card.append(el("div", "dev-l2", segs.join(" · ")));
+    card.append(el("div", "dev-l3", (st === "offline" ? "最后心跳 " : "心跳 ") + relTime(d.last_seen, now)));
+    if (d.fence_alert === 1) {
+      card.append(el("div", "fence",
+        "🚨 最近越界 " + (d.fence_alert_ms ? fmtDT(d.fence_alert_ms) : "时间未知")));
+    }
+    box.append(card);
+  });
+}
+
+/* ── 近 7 日趋势：识别量柱（CSS）+ 负面占比线（内联 SVG），无图表库 ── */
+function renderTrend(stats) {
+  const box = BODIES.trend;
+  box.textContent = "";
+  const daily = (stats.daily || []).slice(-7);   // 末 7 格 = 6 个完整天 + 今天
+  if (!daily.length || daily.every((d) => !d.total)) {
+    $("trend-body").textContent = "";
+    showEmpty(box, "近 7 日还没有识别记录");
+    return;
+  }
+  const maxTotal = Math.max.apply(null, daily.map((d) => d.total).concat([1]));
+  const plot = el("div", "chart-plot");
+  const area = el("div", "bar-area");
+  daily.forEach((d) => {
+    const col = el("div", "bar-col");
+    if (d.total) {
+      const h = Math.round((d.total / maxTotal) * 100);
+      const val = el("span", "bar-val", String(d.total));
+      val.style.bottom = "calc(" + h + "% + 3px)";
+      const bar = el("div", "bar");
+      bar.style.height = h + "%";
+      bar.title = d.label + " 识别 " + d.total + " 次 · 异常 " + d.negative + " 次";
+      col.append(val, bar);
+    } else {
+      col.append(el("div", "bar"));   // 零识别日：2px 基线桩
+    }
+    area.append(col);
+  });
+  plot.append(area);
+  const xAxis = el("div", "chart-x");
+  daily.forEach((d, i) => xAxis.append(el("span", null, i === daily.length - 1 ? "今天" : d.label)));
+  const legend = el("div", "legend");
+  const lg1 = el("span", "lg-item");
+  lg1.append(el("i", "dot total"), document.createTextNode("识别次数（柱）"));
+  const lg2 = el("span", "lg-item");
+  lg2.append(el("i", "dot neg"), document.createTextNode("负面占比（线）"));
+  legend.append(lg1, lg2);
+  box.append(plot, xAxis, legend);
+  requestAnimationFrame(() => drawNegLine(area, daily));
+}
+function drawNegLine(area, daily) {
+  const W = area.clientWidth, H = area.clientHeight;
+  if (!W || !H) return;
+  const pts = daily.map((d, i) => {
+    const pct = d.total ? (d.negative / d.total) * 100 : 0;
+    return [((i + 0.5) / daily.length) * W, 4 + (1 - pct / 100) * (H - 8)];
+  });
+  const poly = pts.map((p) => p[0].toFixed(1) + "," + p[1].toFixed(1)).join(" ");
+  const circles = pts.map((p) =>
+    '<circle cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="3.5" ' +
+    'fill="var(--neg)" stroke="var(--card)" stroke-width="1.5"/>').join("");
+  const old = area.querySelector("svg");
+  if (old) old.remove();
+  /* 内容全部是本函数算出的数字，无用户输入，innerHTML 无 XSS 风险 */
+  area.insertAdjacentHTML("beforeend",
+    '<svg class="chart-svg" viewBox="0 0 ' + W + " " + H + '" aria-hidden="true">' +
+    '<polyline points="' + poly + '" fill="none" stroke="var(--neg)" ' +
+    'stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>' + circles + "</svg>");
+}
+let rszTimer = null;
+window.addEventListener("resize", () => {
+  clearTimeout(rszTimer);
+  rszTimer = setTimeout(() => { if (state.stats && state.catId) renderTrend(state.stats); }, 150);
+});
+
+/* ── 启动：有存口令则静默验证直达看板，否则停留口令门 ── */
+function boot() {
+  let saved = null;
+  try { saved = localStorage.getItem(KEY_STORE); } catch (e) {}
+  if (saved) {
+    /* 免输：已存口令直接进入，不再每次探测；口令失效由设备接口 403 兜底退回口令门 */
+    state.key = saved;
+    enterBoard();
+  }
+}
+boot();
+})();
+</script>
+</body>
+</html>

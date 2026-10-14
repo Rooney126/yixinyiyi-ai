@@ -1,0 +1,5 @@
+使用过的技术方案
+
+模型架构——FDAPMobileCatCNN
+
+A-aug参数
