@@ -15,19 +15,23 @@
 # 推理管线（与 inference.py 重复，旧版）
 """
 
-import os, sys, json, pickle, warnings
+import os
+import pickle
+import warnings
+
 os.environ['JOBLIB_TEMP_FOLDER'] = 'C:/temp'
 warnings.filterwarnings('ignore')
 
+import argparse
 from pathlib import Path
+
+import librosa
 import numpy as np
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
-import librosa
-import argparse
+from torch import nn
+from transformers import Wav2Vec2Model, Wav2Vec2Processor
 
-from transformers import Wav2Vec2Processor, Wav2Vec2Model
 try:
     from transformers import HubertModel, WavLMModel
     HAS_NEW_MODELS = True
@@ -35,7 +39,7 @@ except ImportError:
     HAS_NEW_MODELS = False
 
 # ── 默认路径 (与训练脚本一致) ──
-USER = os.environ.get('USERNAME', os.environ.get('USER', '陈项目负责人'))
+USER = os.environ.get('USERNAME', os.environ.get('USER', 'chen'))
 BASE = Path(f'C:/Users/{USER}/Desktop/模型代码/训练结果')
 
 # ── 参数 (必须与训练脚本一致) ──
@@ -94,7 +98,7 @@ class CatSoundInference:
         if embed_model != 'wav2vec2' and not HAS_NEW_MODELS:
             raise ImportError(f"{embed_model} 需要安装 transformers >= 4.20")
 
-        print(f'🔊 猫声分类推理引擎')
+        print('🔊 猫声分类推理引擎')
         print(f'   设备: {self.device}')
         print(f'   嵌入模型: {embed_model}')
         print(f'   模型目录: {self.results_dir}')
@@ -152,7 +156,7 @@ class CatSoundInference:
         with open(pkl_path, 'rb') as f:
             data = pickle.load(f)
         self._loaded['svm_rf'] = data
-        print(f'        含: SVM + RF + PCA')
+        print('        含: SVM + RF + PCA')
         return data
 
     # ── 预处理 (与训练脚本完全一致) ──

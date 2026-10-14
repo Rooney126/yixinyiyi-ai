@@ -4,17 +4,21 @@ FDAP + SVM 分类实验
 # FDAP/GAP 特征 + SVM 5折交叉验证 → 对比准确率
 """
 
-import os, sys, json, warnings
+import json
+import sys
+import warnings
+
 warnings.filterwarnings('ignore')
 try: sys.stdout.reconfigure(encoding='utf-8')
 except: pass
 
 from pathlib import Path
+
 import numpy as np
-from sklearn.svm import LinearSVC
-from sklearn.model_selection import cross_val_score, StratifiedKFold
-from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.model_selection import cross_val_score
 from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.svm import LinearSVC
 
 # ── 路径 ──
 BASE = Path(r'/path/to/dataset')
@@ -46,6 +50,7 @@ print(f'标签: {len(labels)} 条')
 
 # ── 标签统计 ──
 from collections import Counter
+
 for l, c in Counter(labels).most_common():
     print(f'  {l:<12}: {c}')
 
@@ -98,6 +103,7 @@ print('\n' + '='*50)
 print('RBF SVM 对比 (6类, 5折, 仅FDAP)')
 print('='*50)
 from sklearn.svm import SVC
+
 pipe_rbf = make_pipeline(
     StandardScaler(),
     SVC(kernel='rbf', C=1.0, gamma='scale', random_state=42)
@@ -110,8 +116,8 @@ print(f'  均值: {scores_rbf.mean()*100:.2f}% ± {scores_rbf.std()*100:.2f}%')
 print('\n' + '='*50)
 print('对比 HuBERT freeze SVM 结果:')
 print('='*50)
-print(f'  HuBERT + GAP(均值) 10类:   82.2% (CatSound_V2, 5折)')
-print(f'  HuBERT + GAP(均值) 6类:    84.3% (CatSound_V2, 5折)')
+print('  HuBERT + GAP(均值) 10类:   82.2% (CatSound_V2, 5折)')
+print('  HuBERT + GAP(均值) 6类:    84.3% (CatSound_V2, 5折)')
 
 # 重新跑一次 FDAP/GAP 各 SVC 存结果
 results = {}

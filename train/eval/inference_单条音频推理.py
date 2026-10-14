@@ -10,7 +10,11 @@
 # 统一推理接口：支持 HuBERT+MLP/SVM/RF 单条音频预测
 """
 
-import os, sys, json, time, warnings
+import os
+import sys
+import time
+import warnings
+
 warnings.filterwarnings('ignore')
 os.environ['TRANSFORMERS_OFFLINE'] = '1'
 os.environ['HF_HUB_OFFLINE'] = '1'
@@ -19,17 +23,14 @@ try:
 except Exception:
     pass
 
+import argparse
+from pathlib import Path
+
+import joblib
+import librosa
 import numpy as np
 import torch
-import torch.nn.functional as F
-import librosa
-import joblib
-from pathlib import Path
-from transformers import (
-    HubertModel, WavLMModel,
-    Wav2Vec2FeatureExtractor
-)
-import argparse
+from transformers import HubertModel, Wav2Vec2FeatureExtractor
 
 # ── 配置 ──
 SR = 16000
@@ -172,7 +173,7 @@ class FreezeInference:
         counter = Counter(valid)
         total = len(valid)
         
-        print(f'\n── 批量推理统计 ──')
+        print('\n── 批量推理统计 ──')
         print(f'  成功: {total}/{len(files)}')
         for label, count in counter.most_common():
             pct = count / total * 100

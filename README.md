@@ -1,78 +1,49 @@
-# 译芯怡意 · 猫语通（YixinYiyi CatVoice AI）
+# 译芯怡意（YixinYiyi）
 
-多模态 AI 驱动的宠物全生命周期服务平台。从「猫叫声理解」出发，让养宠人真正听懂自家猫：通过端侧实时识别 + 云端细粒度分析 + 数据闭环迭代，把猫的情绪、健康信号变成养宠人看得懂的日常信息。
+猫叫识别项目。网页或驻置设备录到叫声后上传，服务端先用门卫模型过滤（猫/非猫二分类），再用 10 类模型分类（呼叫、防御、疼痛等），映射成情绪和养护提示给养猫人看。门卫模型蒸馏到 MCU 的训练代码也在仓库里。
 
-> 学生创业项目（物联网工程方向）。本仓库公开训练、服务端、前端全部核心代码；模型权重与真实用户数据不在此仓库。
+![首页](docs/screenshots/U01.png)
 
-## 亮点
+猫档案页：每只猫的时间线、情绪统计、识别趋势、记录导出。
 
-- **端云协同**：MCU（ESP32-S3 等）上跑蒸馏后的小模型做唤醒/门卫过滤，云端跑 10 类细粒度叫声分类
-- **模型压缩落地**：教师-学生知识蒸馏（`kd_tiny_mcu_distill.py`），把 CNN / DS-ResNet 蒸馏到微型 MCU 可部署的尺寸，导出 TFLite / ONNX
-- **真实数据闭环**：自采标注管线 + 内测家庭反馈回流，形成「采集 → 标注 → 训练 → 上线 → 反馈」飞轮
-- **工程完整**：单元测试、安全测试、部署预检脚本齐全；Flask 生产服务 + SQLite
+![猫档案](docs/screenshots/U07.png)
 
-## 架构
+物联网工程专业的毕业设计延伸出来的创业项目，训练、后端、前端都是自己做着学的。模型权重和数据集没有放进仓库，训练脚本里的数据路径需要自己配。
 
-```
-[猫项圈 / 驻置设备]
-        │  实时音频
-        ▼
-[MCU 端侧模型]  ← 蒸馏后的小模型（唤醒 / 二分类门卫，TFLite）
-        │  触发事件
-        ▼
-[云端服务 Flask] ─── SQLite（用户 / 事件 / 反馈）
-        │
-        ├── 10 类叫声识别（FDAP CNN / DS-ResNet）
-        ├── 情绪与健康事件看板
-        └── 数据飞轮（复核标注 → 再训练）
-```
-
-## 目录结构
+## 目录
 
 ```
-train/          训练与研究（PyTorch）
-  train/        主训练脚本：FDAP CNN、DS-ResNet、知识蒸馏（kd_tiny_mcu_distill.py）、TFLite/ONNX 导出
-  experiments/  数据增强与事件分割实验
-  eval/         评估与推理（含 Wav2Vec2/HuBERT 对比实验）
-  analysis/     嵌入空间与 t-SNE 可视化分析
-app/            应用服务
-  server.py     本地版服务（Flask，Windows 原生版 v2）
-  docs/         技术文档（API、标注管线、使用说明）
-  tests/        单元测试 / 安全测试 / 部署预检测试
-frontend/       用户看板前端（Vue 3 + Pinia + Vite + TS）
-webapp/         移动优先看板（原生 HTML/CSS/JS 单文件，零外部依赖）
-docs/           技术方案沉淀、数据集报告、界面截图
+train/          训练代码（PyTorch）
+  train/        FDAP CNN、DS-ResNet、知识蒸馏到 MCU、TFLite/ONNX 导出
+  experiments/  数据增强、事件分割实验
+  eval/         评估推理，含 Wav2Vec2/HuBERT 对比
+  analysis/     t-SNE 可视化
+app/            Flask 服务 + SQLite
+  tests/        pytest，含安全测试和部署预检
+frontend/       Vue 3 + Pinia + Vite + TS
+webapp/         移动端看板，原生单文件实现
+docs/           技术文档和界面截图
 ```
 
-## 技术栈
-
-| 层 | 技术 |
-|---|---|
-| 训练 | Python · PyTorch · librosa · noisereduce |
-| 端侧 | 知识蒸馏 · TFLite / ONNX 导出 · MCU 部署 |
-| 服务端 | Flask · SQLite · waitress |
-| 前端 | Vue 3 · Pinia · Vite · TypeScript；原生单文件版（webapp/） |
-| 工程 | pytest · 安全测试 · 部署预检脚本 · 数据脱敏 |
-
-## 快速开始
+## 跑起来
 
 ```bash
-# 1. 训练（以 FDAP CNN 为例）
+# 训练（FDAP CNN）
 python train/train/train_fdap_cnn_v2_ch64.py
 
-# 2. 启动本地服务
+# 本地服务
 python app/server.py
 
-# 3. 打开 http://127.0.0.1:5173 体验
+# 测试
+cd app && python -m pytest tests/
 ```
 
-详细说明见 `app/docs/` 与 `docs/技术方案沉淀_v1.md`。
+## 一些记录
 
-## 数据与隐私
+- 门卫模型（二分类）在服务端先过滤猫/非猫，避免人声杂音白跑 10 类模型；蒸馏到 MCU 下沉到设备的训练代码在 train/train/
+- 知识蒸馏：FDAP 教师（~70K 参数，F1 ~86%）蒸到 MCU 尺寸的学生模型（logit-level KD），代码在 train/train/kd_tiny_mcu_distill.py
+- 训练数据：CatSound V2 公开数据集 5925 条猫叫 + MagicData 人声负样本，内测家庭的录音和纠错反馈用于补集和验证
 
-- 真实用户/内测数据不进入本仓库；接口层做了口令保护、限流、录音短存与脱敏
-- 训练脚本中的数据集路径为占位符，需按你的实际路径调整
+## 数据说明
 
-## License
-
-MIT © Rooney126
+内测用户的录音和数据不公开。接口层做了口令校验、限流，录音短存。

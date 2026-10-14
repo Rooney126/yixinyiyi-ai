@@ -11,32 +11,46 @@
 # 主训练入口：HuBERT/WavLM freeze/finetune 模式
 """
 
-import os, sys, json, time, warnings, hashlib, joblib
+import hashlib
+import json
+import os
+import sys
+import time
+import warnings
+
+import joblib
+
 warnings.filterwarnings('ignore')
 os.environ['JOBLIB_TEMP_FOLDER'] = '/tmp'
 os.environ['TRANSFORMERS_OFFLINE'] = '0'
 os.environ['HF_HUB_OFFLINE'] = '0'
 sys.stdout.reconfigure(encoding='utf-8')
+import argparse
+import csv
 from pathlib import Path
+
+import librosa
 import numpy as np
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import f1_score
+from sklearn.model_selection import GroupKFold
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.svm import LinearSVC
+from torch import nn
 from torch.utils.data import Dataset
 from transformers import (
-    HubertModel, HubertForSequenceClassification,
-    WavLMForSequenceClassification, WavLMModel,
-    Wav2Vec2FeatureExtractor, Trainer, TrainingArguments,
-    EarlyStoppingCallback, get_linear_schedule_with_warmup
+    EarlyStoppingCallback,
+    HubertForSequenceClassification,
+    HubertModel,
+    Trainer,
+    TrainingArguments,
+    Wav2Vec2FeatureExtractor,
+    WavLMForSequenceClassification,
+    WavLMModel,
+    get_linear_schedule_with_warmup,
 )
-from sklearn.svm import LinearSVC
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.preprocessing import StandardScaler, LabelEncoder
-from sklearn.model_selection import GroupKFold
-from sklearn.metrics import f1_score
-import csv
-import librosa
-import argparse
 
 # ── 默认配置 ──
 SR = 16000
@@ -44,9 +58,9 @@ SR = 16000
 DURATION = 5.0
 BATCH_SIZE = 16
 NUM_CLASSES = 10
-DATA_DIR = Path('/mnt/c/Users/陈项目负责人/Desktop/CatSound_DataSet_V2/NAYA_DATA_AUG1X')
-DATA_SELF_DIR = Path('/mnt/c/Users/陈项目负责人/Desktop/库猫语音频')
-OUTPUT_DIR = Path('/mnt/c/Users/陈项目负责人/Desktop/模型代码/训练结果/hubert_v2')
+DATA_DIR = Path('/Desktop/CatSound_DataSet_V2/NAYA_DATA_AUG1X')
+DATA_SELF_DIR = Path('/Desktop/库猫语音频')
+OUTPUT_DIR = Path('/Desktop/模型代码/训练结果/hubert_v2')
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 CACHE_DIR = OUTPUT_DIR / 'cache'
 CACHE_DIR.mkdir(exist_ok=True)
@@ -302,9 +316,9 @@ def run_freeze_mode(files, labels, cat_ids, is_aug, ctx=None):
                     base_embeddings = e
                     print(f'[freeze v2] 缓存校验通过 ({cache_path.name})')
                 else:
-                    print(f'[freeze v2] [!] 缓存损坏, 重新提取')
+                    print('[freeze v2] [!] 缓存损坏, 重新提取')
             else:
-                print(f'[freeze v2] [!] 无校验文件, 重新提取')
+                print('[freeze v2] [!] 无校验文件, 重新提取')
         except Exception as ex:
             print(f'[freeze v2] [!] 缓存异常: {ex}, 重新提取')
 
@@ -415,7 +429,7 @@ def run_freeze_mode(files, labels, cat_ids, is_aug, ctx=None):
             'f1_clean': float(f1_clean),
         })
 
-    print(f'\n── 5 折 CV (SVM 清洁测试) ──')
+    print('\n── 5 折 CV (SVM 清洁测试) ──')
     print(f'  Acc: {np.mean(svm_fold_scores):.1%} ± {np.std(svm_fold_scores):.1%}')
     
     # 收集 F1
@@ -452,7 +466,7 @@ def run_freeze_mode(files, labels, cat_ids, is_aug, ctx=None):
     # ── 6. 跨数据集自动测试 ──
     cross_results = {}
     cross_data_dirs = [
-        ('orig163', Path(r'/mnt/c/Users/陈项目负责人/Desktop/原猫语分类/情绪分类')),
+        ('orig163', Path(r'/Desktop/原猫语分类/情绪分类')),
     ]
     
     for ds_name, data_dir in cross_data_dirs:
@@ -465,7 +479,7 @@ def run_freeze_mode(files, labels, cat_ids, is_aug, ctx=None):
         cross_results[ds_name] = acc
     
     print(f'\n▓ 模型已保存: {save_dir}')
-    print(f'   └─ svm.pkl  (LinearSVM, 10类, 配对平均训练)')
+    print('   └─ svm.pkl  (LinearSVM, 10类, 配对平均训练)')
 
     return {
         'mode': 'freeze_v2',
@@ -879,7 +893,7 @@ def main():
 
     # 将 args 传递给子函数
     print('═' * 60)
-    print(f'  猫声分类 - CatSound_V2')
+    print('  猫声分类 - CatSound_V2')
     print(f'  模型: {args.model.upper()}, 模式: {args.mode}, 池化: {args.pooling}')
     print(f'  LR: {args.lr}, Epochs: {args.epochs}')
     print('═' * 60)

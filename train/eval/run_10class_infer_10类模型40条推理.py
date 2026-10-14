@@ -4,19 +4,24 @@
 # 10类冻洁模型 → 新猫语 40条音频推理（按类别统计）
 """
 
-import os, sys, json, re, warnings
+import json
+import os
+import sys
+import warnings
+
 warnings.filterwarnings('ignore')
 os.environ['TRANSFORMERS_OFFLINE'] = '1'
 os.environ['HF_HUB_OFFLINE'] = '1'
 try: sys.stdout.reconfigure(encoding='utf-8')
 except: pass
 
-from pathlib import Path
 from collections import Counter, defaultdict
-import numpy as np
+from pathlib import Path
+
 import joblib
-import torch
 import librosa
+import numpy as np
+import torch
 from transformers import HubertModel, Wav2Vec2FeatureExtractor
 
 # ── 路径 ──
@@ -139,7 +144,7 @@ for idx, (path, cn_label) in enumerate(all_files):
     mark = '✅' if top_6 == expected_6 else '❌'
     print(f'\n({idx+1:2d}/{len(all_files)}) {mark} {path.name[:40]}...')
     print(f'    标签: [{cn_label}] → 期望: {expected_6}')
-    print(f'    模型TOP5:')
+    print('    模型TOP5:')
     for i in top_idx[:5]:
         lbl = label_names[i]
         p6 = MERGE_6.get(lbl, lbl)
@@ -166,7 +171,7 @@ for cn_label in sorted(correct_by_cn.keys()):
     rate = info['correct'] / info['total'] * 100
     print(f'  {cn_label:8s}: {info["correct"]}/{info["total"]} ({rate:.0f}%)')
 
-print(f'\n预测分布 (6类):')
+print('\n预测分布 (6类):')
 for label, cnt in pred_counts_6.most_common():
     print(f'  {label:<12}: {cnt} ({cnt/total*100:.0f}%)')
 
@@ -178,7 +183,7 @@ for r in results:
     p = r['top5'][0]['merged']
     conf_6[e][p] += 1
 
-print(f'\n混淆矩阵 (6类, 行=期望, 列=预测):')
+print('\n混淆矩阵 (6类, 行=期望, 列=预测):')
 header = '        ' + ' '.join(f'{c:>10}' for c in classes_6)
 print(header)
 for e in classes_6:

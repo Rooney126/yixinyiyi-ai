@@ -3,20 +3,27 @@
 
 损失函数: L = α * CE(y_hard, y_pred) + (1-α) * T² * KL(soft_teacher/T, y_pred/T)
 """
-import os, sys, json, csv, warnings, time
+import csv
+import json
+import os
+import sys
+import time
+import warnings
+
 warnings.filterwarnings('ignore')
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 sys.stdout.reconfigure(encoding='utf-8')
 from pathlib import Path
+
+import librosa
 import numpy as np
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
-from torch.utils.data import Dataset, DataLoader
+from sklearn.metrics import f1_score
 from sklearn.model_selection import GroupKFold
 from sklearn.preprocessing import LabelEncoder
-from sklearn.metrics import f1_score
-import librosa
+from torch import nn
+from torch.utils.data import DataLoader
 
 # ─── 超参 ───
 SR=16000; N_MELS=128; N_FFT=512; HOP_LENGTH=256; VAD_FRAMES=100; VAD_TOP_DB=25
@@ -26,7 +33,7 @@ BATCH_SIZE=64; EPOCHS=100; LR=1e-3; WEIGHT_DECAY=1e-4; NUM_WORKERS=2
 T=4           # 温度
 ALPHA=0.5     # α: 1=纯CE, 0=纯模仿teacher (teacher 82%，hard label 不能丢太多)
 
-BASE=Path('/mnt/c/Users/陈项目负责人/Desktop')
+BASE=Path('/Desktop')
 DATA_DIR=BASE/'CatSound_DataSet_V2/NAYA_DATA_AUG1X'
 # Teacher 输出的 soft logits (由 train_teacher_full.py 生成)
 TEACHER_LOGITS=BASE/'模型代码/训练结果/ch64_teacher_full/teacher_logits.npy'
@@ -187,7 +194,7 @@ def train_student(fold,train_files,train_labels,test_files,test_labels,soft_logi
 
 def main():
     print(f'\n{"█"*60}')
-    print(f'  KD: Teacher(HuBERT)→Student(ch64, 70K)')
+    print('  KD: Teacher(HuBERT)→Student(ch64, 70K)')
     print(f'  T={T}, α={ALPHA}')
     print(f'{"█"*60}')
 
@@ -199,7 +206,7 @@ def main():
     print('\n[2] 加载 Teacher soft logits...', flush=True)
     if not os.path.exists(str(TEACHER_LOGITS)):
         print(f'  错误: 找不到 {TEACHER_LOGITS}', flush=True)
-        print(f'  请先运行 train_teacher_full.py', flush=True)
+        print('  请先运行 train_teacher_full.py', flush=True)
         return
     soft_logits=np.load(str(TEACHER_LOGITS))
     assert len(soft_logits)==len(files), f'soft logits shape错: {soft_logits.shape} vs {len(files)}'

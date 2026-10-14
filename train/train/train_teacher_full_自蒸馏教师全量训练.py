@@ -2,24 +2,30 @@
 自蒸馏 Step 1: 全量训 ch64 Teacher on CatSound_V2 (全部 5922 条, 不 split)
 → dump soft logits → 供 student 蒸馏
 """
-import os, sys, json, csv, warnings, time, hashlib
+import csv
+import hashlib
+import os
+import sys
+import time
+import warnings
+
 warnings.filterwarnings('ignore')
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 sys.stdout.reconfigure(encoding='utf-8')
 from pathlib import Path
+
+import librosa
 import numpy as np
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
-from torch.utils.data import Dataset, DataLoader, TensorDataset
 from sklearn.preprocessing import LabelEncoder
-from sklearn.metrics import f1_score
-import librosa
+from torch import nn
+from torch.utils.data import DataLoader, TensorDataset
 
 SR=16000; N_MELS=128; N_FFT=512; HOP_LENGTH=256; VAD_FRAMES=100; VAD_TOP_DB=25
 BATCH_SIZE=64; EPOCHS=100; LR=1e-3; WEIGHT_DECAY=1e-4; NUM_WORKERS=2
 
-BASE=Path('/mnt/c/Users/陈项目负责人/Desktop')
+BASE=Path('/Desktop')
 DATA_DIR=BASE/'CatSound_DataSet_V2/NAYA_DATA_AUG1X'
 OUTPUT_DIR=BASE/'模型代码/训练结果/ch64_teacher_full'
 OUTPUT_DIR.mkdir(parents=True,exist_ok=True)
@@ -154,7 +160,7 @@ def dump_logits(model,mels,labels,out_path):
 
 def main():
     print(f'\n{"█"*60}')
-    print(f'  自蒸馏 Teacher: 全量 ch64 (70K), 不 split')
+    print('  自蒸馏 Teacher: 全量 ch64 (70K), 不 split')
     print(f'{"█"*60}')
     print('\n[1] 加载数据...', flush=True)
     files,labels,cat_ids,is_aug=load_catsound_v2(DATA_DIR)
@@ -173,7 +179,7 @@ def main():
     model.load_state_dict(torch.load(OUTPUT_DIR/'teacher_full_best.pth',map_location=DEVICE))
     dump_logits(model,all_mels,all_labels,OUTPUT_DIR/'teacher_logits.npy')
 
-    print(f'\n完成!', flush=True)
+    print('\n完成!', flush=True)
 
 if __name__=='__main__':
     main()

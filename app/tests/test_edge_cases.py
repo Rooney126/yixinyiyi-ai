@@ -4,7 +4,6 @@ import threading
 
 import numpy as np
 
-
 # ─── 畸形上传（load_model 用假会话顶掉，不依赖真模型）───
 
 def _fake_model(cloud, monkeypatch):

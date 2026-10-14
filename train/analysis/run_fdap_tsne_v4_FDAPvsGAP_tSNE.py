@@ -4,24 +4,31 @@ FDAP t-SNE v4: h5py + PyTorch，不依赖 TensorFlow
 # FDAP t-SNE v4：Pandeya CNN + FDAP/GAP 聚类可视化
 """
 
-import os, sys, json, warnings, h5py
+import json
+import sys
+import warnings
+
+import h5py
+
 warnings.filterwarnings('ignore')
 try: sys.stdout.reconfigure(encoding='utf-8')
 except: pass
 
 from collections import Counter
-from pathlib import Path
 from datetime import datetime
-import numpy as np
+from pathlib import Path
+
 import librosa
+import matplotlib
+import numpy as np
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
-from sklearn.manifold import TSNE
 from sklearn.decomposition import PCA
+from sklearn.manifold import TSNE
 from sklearn.metrics import silhouette_score
 from sklearn.preprocessing import LabelEncoder
-import matplotlib
+from torch import nn
+
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
@@ -340,7 +347,7 @@ le = LabelEncoder()
 y_int = le.fit_transform(labels_all)
 fdap_sil = silhouette_score(fdap_feats, y_int)
 gap_sil = silhouette_score(gap_feats, y_int)
-print(f'\n  轮廓系数 (越高越好):')
+print('\n  轮廓系数 (越高越好):')
 print(f'    FDAP: {fdap_sil:.4f}')
 print(f'    GAP:  {gap_sil:.4f}')
 print(f'    差距: {fdap_sil - gap_sil:+.4f}')
@@ -356,4 +363,4 @@ with open(out_json, 'w') as f:
         'silhouette_diff': round(float(fdap_sil - gap_sil), 4),
     }, f, indent=2)
 print(f'  ✅ 指标: {out_json}')
-print(f'\n  和已有的 HuBERT t-SNE 对比看聚类差异')
+print('\n  和已有的 HuBERT t-SNE 对比看聚类差异')

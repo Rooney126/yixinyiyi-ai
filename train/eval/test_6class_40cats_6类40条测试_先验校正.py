@@ -4,23 +4,28 @@
 # 6类模型 + 先验校正 → 新猫语 40条测试
 """
 
-import os, sys, json, warnings
+import json
+import os
+import sys
+import warnings
+
 warnings.filterwarnings('ignore')
-os.environ['HF_HOME'] = '/mnt/c/Users/陈项目负责人/.cache/huggingface'
+os.environ['HF_HOME'] = '/.cache/huggingface'
 os.environ['TRANSFORMERS_OFFLINE'] = '1'
 try: sys.stdout.reconfigure(encoding='utf-8')
 except: pass
 
-from pathlib import Path
 from collections import Counter, defaultdict
-import numpy as np
+from pathlib import Path
+
 import joblib
-import torch
 import librosa
+import numpy as np
+import torch
 from transformers import HubertModel, Wav2Vec2FeatureExtractor
 
 # ── 路径 ──
-BASE = Path('/mnt/c/Users/陈项目负责人/Desktop')
+BASE = Path('/Desktop')
 DATA_DIR = BASE / '新猫语分类/新情绪分类'
 MODEL_DIR = BASE / '模型代码/训练结果/hubert_v2/freeze_model_hubert_20260618_152123'
 

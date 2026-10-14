@@ -8,7 +8,12 @@ t-SNE 可视化 — FDAP ch64 嵌入空间 (适配 train_cnn_pipeline_v2_vadexp.
 输出: PROJECT_ROOT\train\output\tsne_result.png
 """
 
-import os, sys, csv, json, hashlib, time, warnings
+import csv
+import os
+import sys
+import time
+import warnings
+
 # 强制 UTF-8 输出 (Windows GBK 终端无法打印 emoji)
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8', errors='replace')
@@ -17,18 +22,21 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 os.environ['PYTHONWARNINGS'] = 'ignore'
 
 from pathlib import Path
-import numpy as np
+
 import matplotlib
+import numpy as np
+
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+
 # 中文字体修复（Windows: 微软雅黑/黑体）
 plt.rcParams['font.sans-serif'] = ['Microsoft YaHei', 'SimHei', 'Arial Unicode MS']
 plt.rcParams['axes.unicode_minus'] = False
-import torch
-import torch.nn as nn
-from sklearn.preprocessing import LabelEncoder
 import librosa
 import noisereduce as nr
+import torch
+from sklearn.preprocessing import LabelEncoder
+from torch import nn
 
 # ═══════════════════════════════════════
 #  配置 (与 train_cnn_pipeline_v2_vadexp.py 一致)
@@ -338,7 +346,7 @@ def main():
         return
     state = torch.load(str(MODEL_PATH), map_location=DEVICE, weights_only=True)
     model.load_state_dict(state, strict=False)
-    print(f'  ✅ fold3_best.pth 加载完成')
+    print('  ✅ fold3_best.pth 加载完成')
 
     # ── 加载数据 ──
     print('[1] 加载数据取样 (每类 ≤200 条, 控点)...')
@@ -381,7 +389,7 @@ def main():
     print(f'  类别分布: {dict(zip(unique_labels, counts))}')
 
     # ── t-SNE ──
-    print(f'\n[3] t-SNE 降维 (n_components=2, perplexity=30)...')
+    print('\n[3] t-SNE 降维 (n_components=2, perplexity=30)...')
     from sklearn.manifold import TSNE
     tsne = TSNE(n_components=2, perplexity=min(30, len(embeds) // 3),
                 random_state=42, max_iter=1000, verbose=1)
@@ -389,7 +397,7 @@ def main():
     print(f'  t-SNE 完成: {embed_2d.shape}')
 
     # ── 绘图 ──
-    print(f'\n[4] 绘图...')
+    print('\n[4] 绘图...')
     colors = plt.cm.tab10(np.linspace(0, 1, len(unique_labels)))
     fig, ax = plt.subplots(figsize=(14, 10))
 
@@ -435,7 +443,7 @@ def main():
     plt.close()
 
     print(f'\n{"=" * 50}')
-    print(f'  t-SNE 完成! 输出:')
+    print('  t-SNE 完成! 输出:')
     print(f'    {OUTPUT_DIR / "tsne_vadexp_fold3.png"}')
     print(f'    {OUTPUT_DIR / "tsne_vadexp_per_class.png"}')
     print(f'{"=" * 50}')

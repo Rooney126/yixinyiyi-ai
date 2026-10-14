@@ -4,7 +4,7 @@ __pycache__/
 .pytest_cache/
 *.egg-info/
 
-# 模型权重 / 中间数据（不公开核心资产）
+# 模型权重和中间数据
 *.pth
 *.onnx
 *.tflite

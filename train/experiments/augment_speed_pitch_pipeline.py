@@ -5,15 +5,22 @@
 输出: DATA_DIR / 'aug_SP/' 下按类别存放的 .wav 文件
 """
 
-import os, sys, csv, warnings, time, concurrent.futures
+import concurrent.futures
+import csv
+import os
+import sys
+import time
+import warnings
+
 warnings.filterwarnings('ignore')
 sys.stdout.reconfigure(encoding='utf-8')
 from pathlib import Path
-import numpy as np
+
 import librosa
+import numpy as np
 
 SR = 16000
-BASE = Path('/mnt/c/Users/陈项目负责人/Desktop')
+BASE = Path('/Desktop')
 DATA_DIR = BASE / 'CatSound_DataSet_V2/NAYA_DATA_AUG1X'
 OUT_DIR = DATA_DIR / 'aug_SP'
 

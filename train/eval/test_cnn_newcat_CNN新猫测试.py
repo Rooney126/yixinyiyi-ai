@@ -2,17 +2,21 @@
 CNN 新猫语 40条推理 (快速验证)
 用 fold3_best.pth (F1=68.9%) 跑跨数据集泛化
 """
-import os, sys, warnings, time
+import os
+import sys
+import time
+import warnings
+
 warnings.filterwarnings('ignore')
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 sys.stdout.reconfigure(encoding='utf-8')
-from pathlib import Path
 from collections import Counter, defaultdict
+from pathlib import Path
+
+import librosa
 import numpy as np
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import librosa
+from torch import nn
 
 SR = 16000
 N_MELS = 128
@@ -22,7 +26,7 @@ MAX_T = 300
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 # 路径
-BASE = Path('/mnt/c/Users/陈项目负责人/Desktop')
+BASE = Path('/Desktop')
 DATA_DIR = BASE / '新猫语分类/新情绪分类'
 MODEL_PATH = BASE / '模型代码/训练结果/fdap_cnn_v1/mel_cache/fold3_best.pth'
 
@@ -170,7 +174,7 @@ def main():
     
     # 打印10类结果
     print(f'\n{"═"*50}')
-    print(f' 10类 × 数据集对比 (fold3: F1=68.9%)')
+    print(' 10类 × 数据集对比 (fold3: F1=68.9%)')
     print(f'{"═"*50}')
     total_c = 0
     total_a = 0
@@ -185,7 +189,7 @@ def main():
     
     # 打印6类结果
     print(f'\n{"═"*50}')
-    print(f' 6类合并 (CNN 预测 10类→映射→6类)')
+    print(' 6类合并 (CNN 预测 10类→映射→6类)')
     print(f'{"═"*50}')
     total_c = 0
     total_a = 0

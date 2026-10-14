@@ -8,7 +8,10 @@ Mean pool: 全部帧均值 → 768 维
 # t-SNE 对比：HuBERT Mean Pool vs FDAP 时域分段池化
 """
 
-import os, sys, warnings
+import os
+import sys
+import warnings
+
 warnings.filterwarnings('ignore')
 os.environ['TRANSFORMERS_OFFLINE'] = '1'
 os.environ['HF_HUB_OFFLINE'] = '1'
@@ -16,15 +19,17 @@ try: sys.stdout.reconfigure(encoding='utf-8')
 except: pass
 
 from collections import Counter
+from datetime import datetime
+from pathlib import Path
+
+import librosa
+import matplotlib
 import numpy as np
 import torch
-import librosa
-from pathlib import Path
-from datetime import datetime
-from sklearn.manifold import TSNE
 from sklearn.decomposition import PCA
+from sklearn.manifold import TSNE
 from transformers import HubertModel, Wav2Vec2FeatureExtractor
-import matplotlib
+
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
@@ -60,7 +65,7 @@ POOL_STRATEGIES = [
 
 print('═'*50)
 print('  t-SNE 对比: Mean Pool vs FDAP 时域分段')
-print(f'  层: [3,4,5]均值 | perplexity: 60')
+print('  层: [3,4,5]均值 | perplexity: 60')
 print('═'*50)
 
 # ── 加载 ──

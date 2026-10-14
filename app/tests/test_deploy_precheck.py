@@ -7,7 +7,6 @@
 pytest 临时目录；不接触生产。
 """
 import hashlib
-import os
 import shutil
 import socket
 import sqlite3
@@ -21,7 +20,6 @@ import pytest
 REAL_APP_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REAL_APP_DIR / "scripts"))
 import deploy_precheck as dp  # noqa: E402
-
 
 # ────────────────────────── 工具 ──────────────────────────
 

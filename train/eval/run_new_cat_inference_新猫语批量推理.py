@@ -4,19 +4,22 @@
 # 新猫语测试集批量推理（含6类合并评估）
 """
 
-import os, sys, json, warnings
+import os
+import sys
+import warnings
+
 warnings.filterwarnings('ignore')
 os.environ['TRANSFORMERS_OFFLINE'] = '1'
 os.environ['HF_HUB_OFFLINE'] = '1'
 try: sys.stdout.reconfigure(encoding='utf-8')
 except: pass
 
+from pathlib import Path
+
+import joblib
+import librosa
 import numpy as np
 import torch
-import torch.nn.functional as F
-import librosa
-import joblib
-from pathlib import Path
 from transformers import HubertModel, Wav2Vec2FeatureExtractor
 
 SR = 16000
@@ -152,12 +155,12 @@ with torch.no_grad():
 
 # 汇总
 print(f'\n{"="*60}')
-print(f'  结果汇总')
+print('  结果汇总')
 print(f'{"="*60}')
 print(f'  10类准确率: {correct_10}/{total} = {correct_10/total:.1%}')
 print(f'  6类合并准确率: {correct_6}/{total} = {correct_6/total:.1%}')
 
-print(f'\n  ─── 各类详情 ───')
+print('\n  ─── 各类详情 ───')
 print(f'  {"真实标签":<16s} {"总数":>4s} {"正确":>4s} {"准确率":>7s} {"预测分布":<40s}')
 print(f'  {"─"*75}')
 for label, info in sorted(per_class.items()):
@@ -168,5 +171,5 @@ for label, info in sorted(per_class.items()):
     print(f'  {label:<16s} {info["total"]:>4d} {info["corr"]:>4d} {acc:>6.1%}  {pred_dist:<40s}')
 
 print(f'\n{"="*60}')
-print(f'  结束')
+print('  结束')
 print(f'{"="*60}')

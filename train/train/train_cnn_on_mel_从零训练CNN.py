@@ -10,7 +10,11 @@
 # 从零训练 CNN：Mel谱图 → MobileCatCNN 架构
 """
 
-import os, sys, time, json, warnings
+import os
+import sys
+import time
+import warnings
+
 warnings.filterwarnings('ignore')
 os.environ['TRANSFORMERS_OFFLINE'] = '1'
 os.environ['HF_HUB_OFFLINE'] = '1'
@@ -18,15 +22,16 @@ try: sys.stdout.reconfigure(encoding='utf-8')
 except: pass
 
 from pathlib import Path
+
+import h5py
+import librosa
 import numpy as np
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
-import librosa
-import h5py
+from sklearn.model_selection import GroupKFold
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.svm import LinearSVC
-from sklearn.model_selection import GroupKFold
+from torch import nn
 
 # ── 配置 ──
 SR = 12000  # Pandeya 用的 12kHz
@@ -186,7 +191,7 @@ def load_pandeya_weights(model, h5_path):
     model.fc.bias.data.copy_(torch.from_numpy(fc_b))
     
     f.close()
-    print(f'  已加载 Pandeya 预训练权重 (5 Conv + 1 FC)')
+    print('  已加载 Pandeya 预训练权重 (5 Conv + 1 FC)')
 
 
 # =========================================================
@@ -506,7 +511,7 @@ def main():
     model_fdap = PandeyaCNN(mode='pool').to(DEVICE)
     load_pandeya_weights(model_fdap, MODEL_PATH)
     print(f'\n{"="*60}')
-    print(f'  FDAP 特征 (conv3+conv4+pool, 608-dim) + RF')
+    print('  FDAP 特征 (conv3+conv4+pool, 608-dim) + RF')
     print(f'{"="*60}')
     X_fdap = extract_fdap_features(model_fdap, samples, mel_cache)
     fdap_mean, fdap_std = cv_on_features(X_fdap, samples, classifier_type='rf')
@@ -515,12 +520,12 @@ def main():
     
     # 结果汇总
     print(f'\n{"═"*60}')
-    print(f'  结果汇总')
+    print('  结果汇总')
     print(f'{"═"*60}')
     for label, acc in sorted(results, key=lambda x: -x[1]):
         print(f'  {label:<35s} {acc:.1%}')
     print(f'{"═"*60}')
-    print(f'  论文声称 (FDAP + RF): 87.3%')
+    print('  论文声称 (FDAP + RF): 87.3%')
     print(f'{"═"*60}')
 
 

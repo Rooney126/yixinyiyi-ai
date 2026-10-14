@@ -3,16 +3,20 @@
 用 A_aug fold3 模型（部署版，87.9% F1）
 用法: python infer_single_ch64.py <音频文件路径>
 """
-import os, sys, warnings
+import os
+import sys
+import warnings
+
 warnings.filterwarnings('ignore')
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 sys.stdout.reconfigure(encoding='utf-8')
 
+from pathlib import Path
+
+import librosa
 import numpy as np
 import torch
-import torch.nn as nn
-import librosa
-from pathlib import Path
+from torch import nn
 
 # ── 与训练管线完全一致的参数 ──
 SR = 16000
@@ -249,7 +253,7 @@ def main():
         if alt_path.exists():
             model_path = alt_path
         else:
-            print(f"❌ 找不到模型文件")
+            print("❌ 找不到模型文件")
             print(f"   尝试路径1: {model_path}")
             print(f"   尝试路径2: {alt_path}")
             sys.exit(1)

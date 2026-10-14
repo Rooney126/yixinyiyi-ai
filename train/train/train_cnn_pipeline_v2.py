@@ -19,7 +19,14 @@
 训练: 每段独立样本, 标签=文件标注. 交叉熵. GroupKFold按cat_id.
 """
 
-import os, sys, time, json, csv, warnings, hashlib
+import csv
+import hashlib
+import json
+import os
+import sys
+import time
+import warnings
+
 warnings.filterwarnings('ignore')
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 os.environ['PYTHONWARNINGS'] = 'ignore'
@@ -27,17 +34,18 @@ if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
 
 from pathlib import Path
-import numpy as np
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-from torch.utils.data import Dataset, DataLoader
-from sklearn.model_selection import GroupKFold
-from sklearn.preprocessing import LabelEncoder
-from sklearn.metrics import f1_score
-from sklearn.utils.class_weight import compute_class_weight
+
 import librosa
 import noisereduce as nr
+import numpy as np
+import torch
+import torch.nn.functional as F
+from sklearn.metrics import f1_score
+from sklearn.model_selection import GroupKFold
+from sklearn.preprocessing import LabelEncoder
+from sklearn.utils.class_weight import compute_class_weight
+from torch import nn
+from torch.utils.data import DataLoader, Dataset
 
 # ═══════════════════════════════════════
 #  配置
@@ -76,13 +84,13 @@ CLIP_GRAD = 5.0
 
 
 # 路径
-import platform; _USER='陈项目负责人'
+import platform; _USER='chen'
 if platform.system()=='Windows':
     BASE = Path(f'C:/Users/{_USER}/Desktop')
 else:
-    BASE = Path('/mnt/c/Users/陈项目负责人/Desktop')
+    BASE = Path('/Desktop')
 DATA_DIR = BASE / 'CatSound_DataSet_V2/NAYA_DATA_AUG1X'
-CACHE_DIR = Path('C:/Users/陈项目负责人/AppData/Local/Temp/seg_cache_full')
+CACHE_DIR = Path('C:/Users/chen/AppData/Local/Temp/seg_cache_full')
 CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
 LABELS = ["Angry","Defence","Fighting","Happy","HuntingMind",
@@ -306,10 +314,10 @@ if USE_AUG:
 if platform.system()=='Windows':
     BASE = Path(f'C:/Users/{_USER}/Desktop')
 else:
-    BASE = Path('/mnt/c/Users/陈项目负责人/Desktop')
+    BASE = Path('/Desktop')
 OUTPUT_DIR = Path('PROJECT_ROOT/train/output') / f'fdap_cnn_ch64_{TAG}'
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-CACHE_DIR = Path('C:/Users/陈项目负责人/AppData/Local/Temp/seg_cache_full')
+CACHE_DIR = Path('C:/Users/chen/AppData/Local/Temp/seg_cache_full')
 CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
 if USE_MIN_DUR > 0:
@@ -837,12 +845,12 @@ def train_one_fold(fold, train_mels, train_labels, train_fidxs,
 
 def main():
     print(f'\n{"█" * 50}')
-    print(f'  FDAP 64ch — 新管线 (11步)')
-    print(f'  数据: CatSound_V2')
+    print('  FDAP 64ch — 新管线 (11步)')
+    print('  数据: CatSound_V2')
     print(f'  配置: LR={LR} BS={BATCH_SIZE} WD={WEIGHT_DECAY}')
     print(f'  Mel: {N_MELS}bands×{MEL_FRAMES}frames, hop={HOP_LENGTH}')
     print(f'  降噪: prop_decrease={PROP_DECREASE}, thr={MIN_RMS_THRESH}')
-    print(f'  VAD: onset=quiet×1.5, offset=quiet×1.2, min_seg=0.25s, buffer=0.15s')
+    print('  VAD: onset=quiet×1.5, offset=quiet×1.2, min_seg=0.25s, buffer=0.15s')
     print(f'  输出: {OUTPUT_DIR}')
     print(f'{"█" * 50}')
 
@@ -893,7 +901,7 @@ def main():
 
     # ── 结果 ──
     print(f'\n{"█" * 50}')
-    print(f'  结果 (新管线)')
+    print('  结果 (新管线)')
     print(f'{"█" * 50}')
     for i, (a, f) in enumerate(zip(fold_accs, fold_f1s), 1):
         print(f'  折{i}: Acc={a:.1%} F1={f:.1%}')

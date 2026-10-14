@@ -1,20 +1,23 @@
 """
 诊断: 检查 VAD 分段为什么把多声合成一段
 """
-import os, sys, warnings
+import os
+import sys
+import warnings
+
 warnings.filterwarnings('ignore')
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 sys.stdout.reconfigure(encoding='utf-8')
 
-import numpy as np
+
 import librosa
-from pathlib import Path
+import numpy as np
 
 SR = 16000
 FRAME_LEN = 2048
 HOP_LENGTH = 256
 
-audio_path = "/mnt/c/Users/陈项目负责人/Desktop/cat_test.wav"
+audio_path = "/Desktop/cat_test.wav"
 y, _ = librosa.load(audio_path, sr=SR, mono=True)
 
 # 帧RMS

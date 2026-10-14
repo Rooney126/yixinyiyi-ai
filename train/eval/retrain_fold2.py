@@ -2,29 +2,30 @@
 重训折2 (patience=20)
 读取已有缓存 → GroupKFold取折2 → train_one_fold
 """
-import sys, json, time, csv, os, warnings
+import os
+import sys
+import warnings
+
 warnings.filterwarnings('ignore')
-sys.path.insert(0, '/mnt/c/Users/陈项目负责人/Desktop/模型代码')
+sys.path.insert(0, '/Desktop/模型代码')
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
-from pathlib import Path
 import numpy as np
 import torch
-from torch.utils.data import Dataset, DataLoader, WeightedRandomSampler
 from sklearn.model_selection import GroupKFold
 from sklearn.preprocessing import LabelEncoder
-from sklearn.metrics import f1_score
-from sklearn.utils.class_weight import compute_class_weight
-
 from train_cnn_pipeline_v2 import (
-    load_catsound_v2, preprocess_all, CatMelDataset, FDAPMobileCatCNN,
-    train_one_fold, SR, N_MELS, N_FFT, HOP_LENGTH, MEL_FRAMES,
-    BATCH_SIZE, EPOCHS, LR, WEIGHT_DECAY, NUM_WORKERS, PATIENCE,
-    CLIP_GRAD, LABELS, DEVICE, DATA_DIR, CACHE_DIR, OUTPUT_DIR
+    CACHE_DIR,
+    DATA_DIR,
+    OUTPUT_DIR,
+    PATIENCE,
+    load_catsound_v2,
+    preprocess_all,
+    train_one_fold,
 )
 
-# 重设 patience
-PATIENCE = 20
+# 覆盖 patience：本脚本专用于 fold2 重训，用更宽松的早停
+PATIENCE = 20  # noqa: F811 有意覆盖导入值
 
 def main():
     print(f'\n{"█"*50}')

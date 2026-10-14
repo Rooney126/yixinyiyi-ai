@@ -15,20 +15,24 @@
 # 逐帧投票：HuBERT 每帧分类后投票合并结果
 """
 
-import os, sys, time
+import os
+import sys
+import time
+
 os.environ['TRANSFORMERS_OFFLINE'] = '1'
 os.environ['HF_HUB_OFFLINE'] = '1'
 try: sys.stdout.reconfigure(encoding='utf-8')
 except: pass
 
+import argparse
+from collections import Counter
 from pathlib import Path
+
+import joblib
+import librosa
 import numpy as np
 import torch
-import librosa
-import joblib
-from collections import Counter
 from transformers import HubertModel, Wav2Vec2FeatureExtractor
-import argparse
 
 # ── 配置 ──
 SR = 16000
@@ -66,7 +70,7 @@ CN_MAP = {
     '防御(响尾蛇嘶哈)': 'Defence',
 }
 
-print(f'[加载] HuBERT + SVM (10类, freeze)')
+print('[加载] HuBERT + SVM (10类, freeze)')
 print(f'  模型: {MODEL_DIR}')
 print(f'  设备: {DEVICE}')
 t0 = time.time()
@@ -306,7 +310,7 @@ def run_directory_test(test_dir, merge_map=None):
         print(f'    均值池化 (基线): {mean_ok}/{n_files} = {mean_acc:.0%}')
         print(f'  {diff_emoji} 逐帧投票:       {pf_ok}/{n_files} = {pf_acc:.0%}')
         if pf_acc < mean_acc and pf_diffs:
-            print(f'    ─ 差异文件 (per-frame 失败):')
+            print('    ─ 差异文件 (per-frame 失败):')
             for name, got, exp, top3, nf in pf_diffs[:3]:
                 top3_str = ', '.join([f'{k}={v}' for k, v in top3[:3]])
                 print(f'      {name}: 期望={exp}, 模型={got}  (帧投票: {top3_str}, 共{nf}帧)')
@@ -318,7 +322,7 @@ def run_directory_test(test_dir, merge_map=None):
     print(f'  Per-frame: {perframe_correct}/{total_files} = {perframe_correct/total_files:.1%}')
     
     # 按类对比
-    print(f'\n  ── 各类对比（均值 vs Per-frame）──')
+    print('\n  ── 各类对比（均值 vs Per-frame）──')
     print(f'  {"类别":<14} {"均值":>8} {"PerFrame":>10} {"差异":>8}')
     print(f'  {"─"*42}')
     for cls in sorted(perframe_detail.keys()):
@@ -350,7 +354,7 @@ def run_single_file_test(audio_path, merge_map=None):
         pred_pf, conf_pf, n_frames, top3, all_preds = result
         print(f'  Per-frame 投票 ({n_frames} 帧):')
         print(f'    胜选: {pred_pf} ({conf_pf:.1%} 帧支持)')
-        print(f'    帧分布:')
+        print('    帧分布:')
         for label, count in top3:
             bar = '█' * int(count / n_frames * 40)
             print(f'      {label:<14} {count:>4}/{n_frames} ({count/n_frames:>5.1%}) {bar}')
@@ -363,7 +367,7 @@ def run_single_file_test(audio_path, merge_map=None):
         # 检查帧标签的稳定性（每秒的标签分布）
         frames_per_second = 50  # HuBERT ~50Hz frame rate
         if n_frames >= frames_per_second:
-            print(f'\n    逐秒标签分布:')
+            print('\n    逐秒标签分布:')
             for sec in range(min(5, n_frames // frames_per_second)):
                 start = sec * frames_per_second
                 end = min((sec + 1) * frames_per_second, n_frames)
@@ -376,7 +380,7 @@ def run_single_file_test(audio_path, merge_map=None):
                 print(f'      第{sec+1}秒 ({start}-{end}帧): 主流={dominant[0]}({dominant[1]/sec_total:.0%})  [{sec_str}]')
     
     # 阈值扫描
-    print(f'\n  阈值扫描:')
+    print('\n  阈值扫描:')
     thresh_results = scan_thresholds(audio_path, merge_map)
     for t, r in sorted(thresh_results.items()):
         print(f'    阈值 >= {t:.0%} → {r["merged"]} (支持 {r["confidence"]:.0%})')

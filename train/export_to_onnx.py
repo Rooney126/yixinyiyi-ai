@@ -10,8 +10,11 @@ FDAPMobileCatCNN PyTorch → ONNX 导出
        app/model/model.quant.onnx  (可选: int8 量化版)
 """
 
-import os, sys, torch
+import os
+import sys
+
 import numpy as np
+import torch
 
 # ── 添加路径 ──
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -81,7 +84,7 @@ else:
 print("\n📦 导出 int8 量化版 (可选)...")
 try:
     import onnx
-    from onnxruntime.quantization import quantize_dynamic, QuantType
+    from onnxruntime.quantization import QuantType, quantize_dynamic
 
     model_onnx = onnx.load(ONNX_PATH)
     quantize_dynamic(

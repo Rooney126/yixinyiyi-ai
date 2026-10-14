@@ -2,21 +2,28 @@
 知识蒸馏第一步: Teacher (HuBERT 95M 冻结 + Linear head)
 训练 → dump soft labels → 供 student 蒸馏
 """
-import os, sys, json, csv, warnings, time
+import csv
+import json
+import os
+import sys
+import time
+import warnings
+
 warnings.filterwarnings('ignore')
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 sys.stdout.reconfigure(encoding='utf-8')
 from pathlib import Path
+
+import librosa
 import numpy as np
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
-from torch.utils.data import Dataset, DataLoader
-from transformers import AutoFeatureExtractor, HubertModel
+from sklearn.metrics import f1_score
 from sklearn.model_selection import GroupKFold
 from sklearn.preprocessing import LabelEncoder
-from sklearn.metrics import f1_score
-import librosa
+from torch import nn
+from torch.utils.data import DataLoader, Dataset
+from transformers import AutoFeatureExtractor, HubertModel
 
 # ─── 超参 ───
 SR=16000
@@ -28,7 +35,7 @@ VAD_TOP_DB=25
 HOP_LENGTH=256
 MAX_AUDIO_LEN=80000    # 5s 音频上限 (VAD 后猫声一般 1-3s, 给余量到 5s)
 
-BASE=Path('/mnt/c/Users/陈项目负责人/Desktop')
+BASE=Path('/Desktop')
 DATA_DIR=BASE/'CatSound_DataSet_V2/NAYA_DATA_AUG1X'
 OUTPUT_DIR=BASE/'模型代码/训练结果/hubert_teacher'
 OUTPUT_DIR.mkdir(parents=True,exist_ok=True)
@@ -186,8 +193,8 @@ def dump_soft_labels(fold,model,files):
 # ─── main ───
 def main():
     print(f'\n{"█"*60}')
-    print(f'  Teacher: HuBERT freeze + Linear(768→10)')
-    print(f'  快速测试: 1 折 → dump soft labels')
+    print('  Teacher: HuBERT freeze + Linear(768→10)')
+    print('  快速测试: 1 折 → dump soft labels')
     print(f'{"█"*60}')
 
     print('\n[1] 加载数据...', flush=True)

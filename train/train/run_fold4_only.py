@@ -2,11 +2,13 @@
 仅跑 A_aug 折4 — 产出 fold4_best.pth → 部署
 基于 train_cnn_pipeline_v2.py
 """
-import sys, os, json, time, warnings, gc
+import time
+import warnings
 from pathlib import Path
+
+import librosa
 import numpy as np
 import torch
-import librosa
 
 warnings.filterwarnings('ignore')
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -16,16 +18,17 @@ if DEVICE == 'cuda':
 
 # ─── 配置（与 A_aug 相同）───
 import platform as _platform
+
 if _platform.system() == 'Windows':
-    _USER = '陈项目负责人'
+    _USER = 'chen'
     BASE = Path(f'C:/Users/{_USER}/Desktop')
     DATA_DIR = Path(f'C:/Users/{_USER}/Desktop/CatSound_DataSet_V2/NAYA_DATA_AUG1X')
     OUTPUT_DIR = Path(f'C:/Users/{_USER}/译芯怡意/app/model')
     CACHE_DIR = Path(f'C:/Users/{_USER}/AppData/Local/Temp/seg_cache_aug')
 else:
-    BASE = Path('/mnt/c/Users/陈项目负责人/Desktop')
+    BASE = Path('/Desktop')
     DATA_DIR = BASE / 'CatSound_DataSet_V2/NAYA_DATA_AUG1X'
-    OUTPUT_DIR = Path('/mnt/c/Users/陈项目负责人/译芯怡意/app/model')
+    OUTPUT_DIR = Path('/译芯怡意/app/model')
     CACHE_DIR = Path('/tmp/seg_cache_aug')
 CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -171,7 +174,8 @@ def preprocess_pipeline(file_path, sr=SR, max_dur=MAX_DUR):
 
 # ─── 加载数据 + 管线预处理 ───
 def load_all():
-    import csv, os
+    import csv
+    import os
     csv_path = DATA_DIR / 'Catmood_NAYA_1xAug.csv'
     files, labels, cat_ids = [], [], []
     with open(csv_path, 'r', encoding='utf-8') as f:
@@ -261,7 +265,7 @@ def load_all():
 
 # ─── 训练 ───
 def train_one_fold(fold, train_mels, train_labels, val_mels, val_labels, output_dir):
-    from torch.utils.data import TensorDataset, DataLoader
+    from torch.utils.data import DataLoader, TensorDataset
 
     train_ds = TensorDataset(train_mels, train_labels)
     train_loader = DataLoader(train_ds, batch_size=BATCH_SIZE, shuffle=True)

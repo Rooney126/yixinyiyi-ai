@@ -3,23 +3,26 @@
 ===============================
 对比原始 fold1 的推理结果
 """
-import os, sys, warnings, time
+import sys
+import time
+import warnings
+
 warnings.filterwarnings('ignore')
 try: sys.stdout.reconfigure(encoding='utf-8')
 except: pass
-from pathlib import Path
 from collections import Counter
+from pathlib import Path
 
+import librosa
 import numpy as np
 import torch
-import torch.nn as nn
-import librosa
+from torch import nn
 
 SR = 16000; N_MELS = 128; N_FFT = 512; HOP_LENGTH = 256
 VAD_FRAMES = 100; VAD_TOP_DB = 25
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-BASE = Path('/mnt/c/Users/陈项目负责人/Desktop')
+BASE = Path('/Desktop')
 DATA_DIR = BASE / '原猫语分类/情绪分类'
 
 LABELS = ["Angry","Defence","Fighting","Happy","HuntingMind",
@@ -138,7 +141,7 @@ def evaluate(model_path, label):
         emoji = '✅' if acc_6 >= 0.5 else '❌'
         print(f'  {emoji} {merged_6:<12} ({en_label:<12}) 10类:{correct_10}/{len(files)}={acc_10:.0%}  6类:{correct_6}/{len(files)}={acc_6:.0%}  → {detail}')
     
-    print(f'\n  ─────────────────────────')
+    print('\n  ─────────────────────────')
     print(f'  10类: {total_correct_10}/{total} = {total_correct_10/total:.1%}')
     print(f'  6类:  {total_correct_6}/{total} = {total_correct_6/total:.1%}')
     
@@ -162,7 +165,7 @@ if __name__ == '__main__':
     )
     
     print(f'\n{"█"*50}')
-    print(f'  对比')
+    print('  对比')
     print(f'  原始 fold1 6类: {acc_orig:.1%}')
     print(f'  增强 fold2 6类: {acc_aug:.1%}')
     delta = acc_aug - acc_orig

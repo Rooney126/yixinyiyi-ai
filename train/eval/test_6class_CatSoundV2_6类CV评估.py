@@ -1,24 +1,27 @@
 # 6类情绪穹顶 → CatSound_V2 交叉验证评估
 """新6类模型验证 - 跑新猫语分类40条 + CatSound_V2各类验证"""
-import os, sys
+import os
+import sys
+
 os.environ['TRANSFORMERS_OFFLINE'] = '1'
 os.environ['HF_HUB_OFFLINE'] = '1'
 try: sys.stdout.reconfigure(encoding='utf-8')
 except: pass
 
+import time
 from pathlib import Path
+
+import joblib
+import librosa
 import numpy as np
 import torch
-import librosa
-import joblib
 from transformers import HubertModel, Wav2Vec2FeatureExtractor
-import time
 
 SR = 16000
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 LAYERS = [3, 4, 5]
 
-BASE = Path('C:/Users/陈项目负责人/Desktop')
+BASE = Path('C:/Users/chen/Desktop')
 MODEL_DIR = BASE / '模型代码/训练结果/hubert_v2/freeze_model_hubert_20260618_152123'
 
 # 加载
@@ -51,7 +54,7 @@ def predict(audio_path):
     return le.classes_[top_idx], probs[top_idx]
 
 # 1. CatSound_V2 各类验证
-print(f'\n═══ CatSound_V2 各类验证 ═══')
+print('\n═══ CatSound_V2 各类验证 ═══')
 # 合并前的原始类 → 取第一条文件
 ORIG_TO_TEST = {
     'Aggressive': ['Angry', 'Defence', 'Fighting', 'Warning'],
@@ -79,9 +82,10 @@ for merged_cls, orig_list in ORIG_TO_TEST.items():
 print(f'  各类正确率: {correct}/{len(le.classes_)}')
 
 # 2. 新猫语分类40条
-print(f'\n═══ 新猫语分类40条 ═══')
+print('\n═══ 新猫语分类40条 ═══')
 NEW_DIR = BASE / '新猫语分类/新情绪分类'
 from collections import Counter
+
 all_preds = Counter()
 cat_files = sorted(NEW_DIR.rglob('*.wav'))
 print(f'  扫描到 {len(cat_files)} 条')
@@ -94,7 +98,7 @@ for i, fp in enumerate(cat_files):
     if (i+1) % 20 == 0:
         print(f'  推理: {i+1}/{len(cat_files)}')
 
-print(f'\n── 分布 ──')
+print('\n── 分布 ──')
 for label, count in all_preds.most_common():
     pct = count / len(cat_files) * 100
     print(f'  {label:<12} {count} 条 ({pct:.1f}%)')

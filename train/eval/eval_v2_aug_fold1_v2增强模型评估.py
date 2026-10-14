@@ -1,25 +1,31 @@
 """
 评估 v2_aug fold1_best.pth — 复用 v2 mel_cache, 10分钟→几秒
 """
-import os, sys, json, csv, warnings, hashlib
+import csv
+import hashlib
+import json
+import os
+import sys
+import warnings
+
 warnings.filterwarnings('ignore')
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 sys.stdout.reconfigure(encoding='utf-8')
 from pathlib import Path
+
+import librosa
 import numpy as np
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
-from torch.utils.data import DataLoader
+from sklearn.metrics import f1_score
 from sklearn.model_selection import GroupKFold
 from sklearn.preprocessing import LabelEncoder
-from sklearn.metrics import f1_score
-import librosa
+from torch import nn
+from torch.utils.data import DataLoader
 
 SR=16000; N_MELS=128; N_FFT=512; HOP_LENGTH=256; VAD_FRAMES=100; VAD_TOP_DB=25
 BATCH_SIZE=64; NUM_WORKERS=2
 
-BASE=Path('/mnt/c/Users/陈项目负责人/Desktop')
+BASE=Path('/Desktop')
 DATA_DIR=BASE/'CatSound_DataSet_V2/NAYA_DATA_AUG1X'
 OUTPUT_DIR=BASE/'模型代码/训练结果/fdap_cnn_v2_aug'
 V2_CACHE=BASE/'模型代码/训练结果/fdap_cnn_v2/mel_cache_vad'
@@ -136,7 +142,7 @@ def main():
     print(f'\n  Acc={acc:.4f} ({acc:.1%})', flush=True)
     print(f'  F1 ={f1:.4f} ({f1:.1%})', flush=True)
 
-    print(f'\n  各类 F1:')
+    print('\n  各类 F1:')
     cf1=f1_score(la,p,average=None,zero_division=0)
     for i,lb in enumerate(le.classes_):
         n=(la==i).sum()

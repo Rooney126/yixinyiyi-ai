@@ -10,27 +10,36 @@
 # 嵌入空间可视化：HuBERT t-SNE + PCA 分析
 """
 
-import os, sys, warnings, json, pickle
+import json
+import os
+import pickle
+import sys
+import warnings
+
 warnings.filterwarnings('ignore')
 os.environ['TRANSFORMERS_OFFLINE'] = '1'
 os.environ['HF_HUB_OFFLINE'] = '1'
 try: sys.stdout.reconfigure(encoding='utf-8')
 except: pass
 
-from collections import Counter, defaultdict
-from pathlib import Path
+from collections import defaultdict
 from datetime import datetime
+from pathlib import Path
+
+import librosa
 import numpy as np
 import torch
-import librosa
-from transformers import HubertModel, Wav2Vec2FeatureExtractor
 
 # ── sklearn 指标 ──
-from sklearn.metrics import silhouette_score, davies_bouldin_score, calinski_harabasz_score
+from sklearn.metrics import (
+    calinski_harabasz_score,
+    davies_bouldin_score,
+    silhouette_score,
+)
+from sklearn.model_selection import StratifiedKFold, cross_val_score
 from sklearn.neighbors import NearestNeighbors
 from sklearn.preprocessing import LabelEncoder
-from sklearn.model_selection import cross_val_score, StratifiedKFold
-from sklearn.svm import SVC
+from transformers import HubertModel, Wav2Vec2FeatureExtractor
 
 # ── 配置 ──
 SR = 16000
@@ -312,9 +321,9 @@ def analyze_class_separation(embeddings, labels_10, cfg_name):
     
     # ── 3.6 SVM 交叉验证（给一个基准分类精度）──
     print('\n  [3.6] LinearSVM 5折 CV 分类准确率 (嵌入层直接分类)')
-    from sklearn.svm import LinearSVC
     from sklearn.pipeline import make_pipeline
     from sklearn.preprocessing import StandardScaler
+    from sklearn.svm import LinearSVC
     
     svm_10 = make_pipeline(StandardScaler(), LinearSVC(max_iter=10000, random_state=SEED, dual='auto'))
     svm_6 = make_pipeline(StandardScaler(), LinearSVC(max_iter=10000, random_state=SEED, dual='auto'))
@@ -366,7 +375,7 @@ if __name__ == '__main__':
     
     # ── 汇总对比 ──
     print(f'\n{"="*60}')
-    print(f'  汇总: 三层配置对比')
+    print('  汇总: 三层配置对比')
     print(f'{"="*60}')
     print(f'  {"配置":<15} {"Silhouette(10)":>15} {"Silhouette(6)":>14} {"DB(10)":>8} {"DB(6)":>8} {"SVM-10":>8} {"SVM-6":>8}')
     print(f'  {"─"*76}')
@@ -383,4 +392,4 @@ if __name__ == '__main__':
     with open(result_path, 'w', encoding='utf-8') as f:
         json.dump(result_dict, f, indent=2, ensure_ascii=False)
     print(f'\n✅ 结果保存: {result_path}')
-    print(f'   快去 Windows 终端跑: python analyze_embedding_space.py')
+    print('   快去 Windows 终端跑: python analyze_embedding_space.py')

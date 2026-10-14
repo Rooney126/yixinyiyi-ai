@@ -2,15 +2,19 @@
 CNN FDAP 嵌入 t-SNE (fold4, F1=84.1%)
 从缓存加载 Mel → CNN 提 384 维嵌入 → t-SNE
 """
-import os, sys, warnings, json, csv, hashlib
+import csv
+import hashlib
+import os
+import sys
+import warnings
+
 warnings.filterwarnings('ignore')
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 sys.stdout.reconfigure(encoding='utf-8')
 from pathlib import Path
 import numpy as np
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
+from torch import nn
 from sklearn.manifold import TSNE
 import matplotlib; matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -19,7 +23,7 @@ SR=16000; N_MELS=128; N_FFT=512; HOP_LENGTH=256; VAD_FRAMES=100
 BATCH_SIZE=128
 DEVICE='cuda' if torch.cuda.is_available() else 'cpu'
 
-BASE=Path('/mnt/c/Users/陈项目负责人/Desktop')
+BASE=Path('/Desktop')
 DATA_DIR=BASE/'CatSound_DataSet_V2/NAYA_DATA_AUG1X'
 CACHE_DIR=BASE/'模型代码/训练结果/fdap_cnn_v2/mel_cache_vad'
 MODEL_PATH=BASE/'模型代码/训练结果/fdap_cnn_v3/fold4_best.pth'
@@ -50,7 +54,7 @@ model.eval()
 print(f'参数量: {sum(p.numel() for p in model.parameters()):,}')
 
 # 加载文件列表和标签
-print(f'加载 CatSound_V2...')
+print('加载 CatSound_V2...')
 files, labels = [], []
 with open(DATA_DIR/'Catmood_NAYA_1xAug.csv') as f:
     reader=csv.reader(f); next(reader)
@@ -63,7 +67,7 @@ with open(DATA_DIR/'Catmood_NAYA_1xAug.csv') as f:
 print(f'{len(files)} 条')
 
 # 从缓存加载 Mel 并提嵌入
-print(f'提嵌入...')
+print('提嵌入...')
 embs, lbls = [], []
 for i in range(0, len(files), BATCH_SIZE):
     batch_files=files[i:i+BATCH_SIZE]
@@ -85,10 +89,10 @@ for i in range(0, len(files), BATCH_SIZE):
 X=np.vstack(embs); y=np.array(lbls)
 print(f'嵌入: {X.shape}')
 
-print(f't-SNE...')
+print('t-SNE...')
 z=TSNE(n_components=2, perplexity=40, random_state=42, verbose=1).fit_transform(X)
 
-print(f'绘图...')
+print('绘图...')
 colors=plt.cm.tab10(np.linspace(0,1,10))
 fig,ax=plt.subplots(figsize=(12,10))
 for i in range(10):

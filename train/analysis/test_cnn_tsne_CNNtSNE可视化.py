@@ -2,19 +2,22 @@
 CNN FDAP 嵌入 t-SNE 可视化
 用 fold3_best 提 CatSound_V2 所有样本的嵌入 → t-SNE
 """
-import os, sys, warnings
+import os
+import sys
+import warnings
+
 warnings.filterwarnings('ignore')
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 sys.stdout.reconfigure(encoding='utf-8')
+import csv
 from pathlib import Path
+
+import matplotlib
 import numpy as np
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import librosa
-import csv
 from sklearn.manifold import TSNE
-import matplotlib
+from torch import nn
+
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
@@ -26,7 +29,7 @@ MAX_T = 300
 BATCH_SIZE = 64
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-BASE = Path('/mnt/c/Users/陈项目负责人/Desktop')
+BASE = Path('/Desktop')
 DATA_DIR = BASE / 'CatSound_DataSet_V2/NAYA_DATA_AUG1X'
 MODEL_PATH = BASE / '模型代码/训练结果/fdap_cnn_v1/mel_cache/fold3_best.pth'
 OUTPUT_DIR = BASE / '模型代码'
@@ -107,25 +110,25 @@ def extract_embeddings(model, files, labels_all, cache_dir, batch_size=64):
 
 def main():
     print(f'设备: {DEVICE}')
-    print(f'加载 fold3 模型...')
+    print('加载 fold3 模型...')
     model = FDAPMobileCatCNN(num_classes=10).to(DEVICE)
     model.load_state_dict(torch.load(MODEL_PATH, map_location=DEVICE, weights_only=True))
     model.eval()
     
-    print(f'加载 CatSound_V2...')
+    print('加载 CatSound_V2...')
     files, labels = load_catsound_v2(DATA_DIR)
     print(f'  总样本: {len(files)}')
     
-    print(f'提取 512 维 FDAP 嵌入 (从 Mel 缓存)...')
+    print('提取 512 维 FDAP 嵌入 (从 Mel 缓存)...')
     CACHE_DIR = BASE / '模型代码/训练结果/fdap_cnn_v1/mel_cache'
     embs, lbls = extract_embeddings(model, files, labels, CACHE_DIR, BATCH_SIZE)
     print(f'  嵌入: {embs.shape}')
     
-    print(f't-SNE 降维 (n_jobs=-1)...')
+    print('t-SNE 降维 (n_jobs=-1)...')
     tsne = TSNE(n_components=2, perplexity=40, random_state=42, n_jobs=-1, verbose=1)
     z = tsne.fit_transform(embs)
     
-    print(f'绘图...')
+    print('绘图...')
     colors = plt.cm.tab10(np.linspace(0, 1, 10))
     fig, ax = plt.subplots(figsize=(12, 10))
     for i in range(10):

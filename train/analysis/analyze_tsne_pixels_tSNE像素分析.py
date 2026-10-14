@@ -4,12 +4,15 @@
 # t-SNE 图像像素级分析（辅助工具）
 """
 
-import sys, warnings, argparse
+import argparse
+import warnings
+
 warnings.filterwarnings('ignore')
-import numpy as np
-from PIL import Image
 from collections import defaultdict
 from pathlib import Path
+
+import numpy as np
+from PIL import Image
 
 # ── 10 类 Pandeya 配色 ──
 COLORS_10 = {

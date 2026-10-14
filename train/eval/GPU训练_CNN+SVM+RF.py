@@ -9,25 +9,29 @@ SVM: GroupKFold CV + 网格搜索 | CNN: K折CV + warmup + 早停
 优化: 文件路径缓存 | Mel 频谱预计算缓存 | 异常处理
 """
 
-import os, json, pickle, warnings
+import json
+import os
+import pickle
+import warnings
+
 # 修复中文用户名导致的 multiprocessing 编码错误
 os.environ['JOBLIB_TEMP_FOLDER'] = 'C:/temp'
 os.makedirs('C:/temp', exist_ok=True)
 warnings.filterwarnings('ignore')
 
 import random
-from pathlib import Path
-from datetime import datetime
 from collections import defaultdict
+from datetime import datetime
+from pathlib import Path
 
-import numpy as np
 import librosa
+import numpy as np
 import torch
-import torch.nn as nn
-from torch.utils.data import Dataset, DataLoader
+from sklearn.model_selection import GridSearchCV, GroupKFold
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.svm import SVC
-from sklearn.model_selection import GridSearchCV, GroupKFold
+from torch import nn
+from torch.utils.data import DataLoader, Dataset
 
 # 随机种子 — 确保可复现
 random.seed(42)
@@ -35,7 +39,7 @@ np.random.seed(42)
 torch.manual_seed(42)
 
 # ── 路径 ──
-USER = os.environ.get('USERNAME', os.environ.get('USER', '陈项目负责人'))
+USER = os.environ.get('USERNAME', os.environ.get('USER', 'chen'))
 EMOTION_DIR = Path(f'C:/Users/{USER}/Desktop/猫语分类/情绪分类')
 TIMBRE_DIR  = Path(f'C:/Users/{USER}/Desktop/猫语分类/音色分类')
 OUTPUT_DIR  = Path(f'C:/Users/{USER}/Desktop/猫语分类/模型代码/训练结果')

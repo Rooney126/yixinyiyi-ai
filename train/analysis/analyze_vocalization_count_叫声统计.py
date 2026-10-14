@@ -5,9 +5,10 @@ CatSound_V2 各类每文件猫叫段数统计
 # 统计每段音频中叫声事件数量分布
 """
 
-import numpy as np
-import librosa
 from pathlib import Path
+
+import librosa
+import numpy as np
 
 SR = 16000
 HOP = 256
@@ -92,11 +93,11 @@ for label in LABELS:
 
 # 汇总
 print(f'\n{"="*65}')
-print(f'  对比 (按平均段数降序)')
+print('  对比 (按平均段数降序)')
 print(f'{"="*65}')
 print(f'  {"类名":<15s} {"文件数":>5s} {"平均段数":>7s} {"  ±std":<6s} {"总段数":>6s} {"静音文件":>7s} {"段长":>6s}')
 print(f'  {"─"*55}')
 for label, s in sorted(results.items(), key=lambda x: x[1]['mean'], reverse=True):
     print(f'  {label:<15s} {s["n_files"]:>5d} {s["mean"]:>7.2f} ±{s["std"]:<5.2f} {s["sum"]:>6d} {s["zeros"]:>7d} {s["seg_dur_mean"]:>5.2f}s')
 
-print(f'\n  如果 Defence=1 段而 Happy=3+ 段 → 叫声数量偏差坐实')
+print('\n  如果 Defence=1 段而 Happy=3+ 段 → 叫声数量偏差坐实')

@@ -5,7 +5,11 @@ FDAP t-SNE v3: 正确加载 model_best.hdf5，从中层提取 Conv 特征图
 # FDAP t-SNE v3（旧版，已废弃）
 """
 
-import os, sys, json, warnings
+import json
+import os
+import sys
+import warnings
+
 warnings.filterwarnings('ignore')
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 os.environ['TRANSFORMERS_OFFLINE'] = '1'
@@ -13,15 +17,17 @@ try: sys.stdout.reconfigure(encoding='utf-8')
 except: pass
 
 from collections import Counter
-from pathlib import Path
 from datetime import datetime
-import numpy as np
+from pathlib import Path
+
 import librosa
-from sklearn.manifold import TSNE
+import matplotlib
+import numpy as np
 from sklearn.decomposition import PCA
+from sklearn.manifold import TSNE
 from sklearn.metrics import silhouette_score
 from sklearn.preprocessing import LabelEncoder
-import matplotlib
+
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
@@ -129,7 +135,7 @@ try:
     # extractor 保留了所有层的引用
 except Exception as e:
     print(f'  ⚠️ 加载完整模型失败: {e}')
-    print(f'  → 尝试安装 kapre...')
+    print('  → 尝试安装 kapre...')
     
     try:
         import subprocess
@@ -139,10 +145,10 @@ except Exception as e:
         mp_outputs = [full_model.layers[i].output for i in MP_LAYER_INDICES]
         extractor = models.Model(inputs=full_model.input, outputs=mp_outputs)
         weights_loaded = True
-        print(f'  ✅ 安装 Kapre 后加载成功')
+        print('  ✅ 安装 Kapre 后加载成功')
     except Exception as e2:
         print(f'  ❌ 仍失败: {e2}')
-        print(f'  → 使用重建架构 + 手动提取权重 (无 Normalization2D)')
+        print('  → 使用重建架构 + 手动提取权重 (无 Normalization2D)')
         
         # 重建架构 (不含 Kapre 和 Normalization2D)
         # 注意: 这会有输入分布偏移, 特征质量不可保证
@@ -337,7 +343,7 @@ le = LabelEncoder()
 y_int = le.fit_transform(labels_all)
 fdap_sil = silhouette_score(fdap_feats, y_int)
 gap_sil = silhouette_score(gap_feats, y_int)
-print(f'\n  轮廓系数:')
+print('\n  轮廓系数:')
 print(f'    FDAP: {fdap_sil:.4f}')
 print(f'    GAP:  {gap_sil:.4f}')
 print(f'    差距: {fdap_sil - gap_sil:+.4f}')
@@ -354,4 +360,4 @@ with open(out_json, 'w') as f:
         'gap_dims': int(gap_feats.shape[1]),
     }, f, indent=2)
 print(f'  ✅ 指标: {out_json}')
-print(f'\n  对比已有的 HuBERT t-SNE 图')
+print('\n  对比已有的 HuBERT t-SNE 图')

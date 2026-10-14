@@ -6,7 +6,11 @@
 # Pandeya model_best.hdf5（原始 Keras 权重）→ 推理验证
 """
 
-import os, sys, time, warnings
+import os
+import sys
+import time
+import warnings
+
 warnings.filterwarnings('ignore')
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 os.environ['TRANSFORMERS_OFFLINE'] = '1'
@@ -15,9 +19,10 @@ try: sys.stdout.reconfigure(encoding='utf-8')
 except: pass
 
 from pathlib import Path
-import numpy as np
-import librosa
+
 import h5py
+import librosa
+import numpy as np
 
 # ── 路径 ──
 BASE = Path(r'/path/to/dataset')
@@ -61,7 +66,6 @@ def build_pandeya_model(input_shape=(None, 96, 1), num_classes=10):
     重建 Pandeya 的 CNN 架构。
     不含自定义 Melspectrogram 层——外部计算 mel 后输入。
     """
-    import tensorflow as tf
     from tensorflow.keras import layers, models
     
     inp = layers.Input(shape=input_shape)
@@ -245,9 +249,9 @@ def test_cross_dataset():
     
     elapsed = time.time() - t0
     
-    print(f'\n[3/3] 结果')
+    print('\n[3/3] 结果')
     print(f'  时间: {elapsed:.1f}s ({elapsed/total:.2f}s/条)')
-    print(f'\n  ── 各类准确率 ──')
+    print('\n  ── 各类准确率 ──')
     print(f'  {"类别":<14} {"总数":>5} {"10类准确":>10} {"6类合并":>10}')
     print(f'  {"─"*41}')
     for cls in sorted(per_class.keys()):
@@ -269,12 +273,12 @@ def test_cross_dataset():
 # =========================================================
 def compare_with_hubert():
     """加载现有 HuBERT+SVM 模型，跑同样数据对比"""
-    import torch
     import joblib
+    import torch
     from transformers import HubertModel, Wav2Vec2FeatureExtractor
     
     print(f'\n{"="*60}')
-    print(f'  HuBERT+SVM 对比')
+    print('  HuBERT+SVM 对比')
     print(f'{"="*60}')
     
     # 加载

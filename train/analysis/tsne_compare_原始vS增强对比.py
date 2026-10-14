@@ -1,19 +1,24 @@
 """t-SNE 对比: 原始ch64 vs 增强ch64"""
-import os, sys, warnings, csv, hashlib
+import csv
+import hashlib
+import os
+import sys
+import warnings
+
 warnings.filterwarnings('ignore')
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 sys.stdout.reconfigure(encoding='utf-8')
 from pathlib import Path
 import numpy as np
 import torch
-import torch.nn as nn
+from torch import nn
 from sklearn.manifold import TSNE
 import matplotlib; matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 SR=16000; N_MELS=128; N_FFT=512; HOP_LENGTH=256; VAD_FRAMES=100
 DEVICE='cuda' if torch.cuda.is_available() else 'cpu'
-BASE=Path('/mnt/c/Users/陈项目负责人/Desktop')
+BASE=Path('/Desktop')
 DATA_DIR=BASE/'CatSound_DataSet_V2/NAYA_DATA_AUG1X'
 CACHE_DIR=BASE/'模型代码/训练结果/fdap_cnn_v2/mel_cache_vad'
 LABELS=["Angry","Defence","Fighting","Happy","HuntingMind","Mating","MotherCall","Paining","Resting","Warning"]

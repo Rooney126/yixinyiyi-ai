@@ -10,12 +10,12 @@ train_binary_gateway.py — 猫/人二分类门卫 CNN 训练脚本
 模型: MiniCatBinary ~20K 参数, 输出 2 类 (猫/非猫)
 """
 
-import os
-import sys
-import json
-import random
-import hashlib
 import argparse
+import hashlib
+import json
+import os
+import random
+import sys
 
 # Windows GBK 控制台无法输出 emoji，强制 UTF-8（重定向/管道场景也适用）
 try:
@@ -24,15 +24,20 @@ try:
 except AttributeError:
     pass
 
-import numpy as np
-from pathlib import Path
 from collections import defaultdict
+from pathlib import Path
 
+import numpy as np
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
-from torch.utils.data import Dataset, DataLoader
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
+from sklearn.metrics import (
+    accuracy_score,
+    confusion_matrix,
+    f1_score,
+    precision_score,
+    recall_score,
+)
+from torch import nn
+from torch.utils.data import DataLoader, Dataset
 
 # ─── 配置 ───────────────────────────────────────────────────────────
 
@@ -486,7 +491,6 @@ def preprocess_human_roots(human_sources, cache_dir, n_target=9000, label=0):
       max_segs>0    → 每文件最多取前 max_segs 条 VAD 段
     跨源轮询取文件，直到集满 n_target 或所有源扫完。
     """
-    import librosa
     os.makedirs(cache_dir, exist_ok=True)
 
     # 每个源准备一个文件迭代器
@@ -744,7 +748,7 @@ def main():
     for r, mode, q, ms, mseg in HUMAN_SOURCES:
         print(f"  负样本: {r}  (mode={mode}, {q}段/文件)")
     print(f"  缓存:   {CACHE_DIR}")
-    print(f"  管线:   对齐 `音频数据预处理流程.txt`")
+    print("  管线:   对齐 `音频数据预处理流程.txt`")
     print("=" * 60)
 
     if not args.skip_preprocess:

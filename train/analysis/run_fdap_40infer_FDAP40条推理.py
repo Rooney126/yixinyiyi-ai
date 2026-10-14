@@ -4,21 +4,27 @@ CNN + FDAP 推理 40 条真实猫声
 # FDAP 特征 → 新猫语 40条推理（Pandeya CNN 路线）
 """
 
-import os, sys, json, warnings, h5py
+import json
+import sys
+import warnings
+
+import h5py
+
 warnings.filterwarnings('ignore')
 try: sys.stdout.reconfigure(encoding='utf-8')
 except: pass
 
+from collections import defaultdict
 from pathlib import Path
-from collections import Counter, defaultdict
-import numpy as np
+
 import librosa
+import numpy as np
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
-from sklearn.svm import LinearSVC
-from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.svm import LinearSVC
+from torch import nn
 
 # ── 路径 ──
 BASE = Path(r'/path/to/dataset')
@@ -114,7 +120,7 @@ y_train_6 = [MERGE_6.get(l,l) for l in y_train]
 
 clf = make_pipeline(StandardScaler(), LinearSVC(C=1.0, max_iter=10000, dual='auto', random_state=42))
 clf.fit(X_train, y_train_6)
-print(f'  ✅ SVM 训练完成')
+print('  ✅ SVM 训练完成')
 
 # ═══════════════════════════════════
 # 3. FDAP 提取 40条音频
@@ -198,7 +204,7 @@ for idx, (path, cn_label) in enumerate(all_files):
 # ── 汇总 ──
 print(f'\n{"═"*60}')
 print(f'CNN+FDAP 40条: {correct}/{total} = {correct/total*100:.1f}%')
-print(f'HuBERT+GAP 40条(之前): 15/40 = 37.5%')
+print('HuBERT+GAP 40条(之前): 15/40 = 37.5%')
 print(f'{"═"*60}\n')
 
 print('各类正确率:')

@@ -4,23 +4,27 @@ HuBERT freeze SVM 纯原始版 (不含 _aug1)
 # HuBERT + 未增强原始音频（2961条）GroupKFold 对比实验
 """
 
-import os, sys, json, warnings
+import json
+import os
+import sys
+import warnings
+
 warnings.filterwarnings('ignore')
 os.environ['TRANSFORMERS_OFFLINE'] = '1'
 os.environ['HF_HUB_OFFLINE'] = '1'
 try: sys.stdout.reconfigure(encoding='utf-8')
 except: pass
 
+from collections import Counter
+from pathlib import Path
+
+import librosa
 import numpy as np
 import torch
-import librosa
-import joblib
-from pathlib import Path
-from collections import Counter
-from sklearn.svm import LinearSVC, SVC
-from sklearn.model_selection import cross_val_score, StratifiedKFold
-from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.model_selection import cross_val_score
 from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.svm import LinearSVC
 from transformers import HubertModel, Wav2Vec2FeatureExtractor
 
 # ── 配置 ──

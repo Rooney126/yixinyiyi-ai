@@ -9,20 +9,25 @@
 # 嵌入空间交互式可视化（旧版，可忽略）
 """
 
-import os, sys, time
+import os
+import sys
+import time
+
 os.environ['TRANSFORMERS_OFFLINE'] = '1'
 os.environ['HF_HUB_OFFLINE'] = '1'
 try: sys.stdout.reconfigure(encoding='utf-8')
 except: pass
 
-from pathlib import Path
+from collections import Counter
 from datetime import datetime
+from pathlib import Path
+
+import librosa
+import matplotlib
 import numpy as np
 import torch
-import librosa
-from collections import Counter
 from transformers import HubertModel, Wav2Vec2FeatureExtractor
-import matplotlib
+
 matplotlib.use('Agg')  # 无头模式
 import matplotlib.pyplot as plt
 
@@ -72,7 +77,7 @@ MERGE_MAP = {
 # =========================================================
 # 加载模型
 # =========================================================
-print(f'[加载] HuBERT + Processor...')
+print('[加载] HuBERT + Processor...')
 t0 = time.time()
 model = HubertModel.from_pretrained('facebook/hubert-base-ls960', local_files_only=True)
 model.to(DEVICE); model.eval()
@@ -136,11 +141,11 @@ print(f'\n嵌入矩阵: {embeddings.shape}')
 # =========================================================
 # 降维 & 可视化
 # =========================================================
-print(f'\n降维...')
+print('\n降维...')
 
 # 先看各类样本数
 counter = Counter(true_labels)
-print(f'  样本分布:')
+print('  样本分布:')
 for cls, cnt in sorted(counter.items(), key=lambda x: -x[1]):
     print(f'    {cls}: {cnt}')
 
@@ -153,7 +158,7 @@ try:
     use_umap = True
     print(f'  UMAP 完成: {coords.shape}')
 except ImportError:
-    print(f'  [*] umap-learn 未安装, 回退 PCA + t-SNE...')
+    print('  [*] umap-learn 未安装, 回退 PCA + t-SNE...')
     # PCA 降噪 → t-SNE
     from sklearn.decomposition import PCA
     from sklearn.manifold import TSNE
@@ -165,7 +170,7 @@ except ImportError:
     tsne = TSNE(n_components=2, perplexity=min(30, len(embeddings)//2),
                 random_state=42, max_iter=1000, learning_rate='auto')
     coords = tsne.fit_transform(emb_pca)
-    print(f'  t-SNE 完成')
+    print('  t-SNE 完成')
 
 # ── 绘图 ──
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 7))
@@ -222,7 +227,7 @@ plt.savefig(str(save_path), dpi=150, bbox_inches='tight')
 print(f'\n✅ 已保存: {save_path}')
 
 # ── 额外: 打印类间距离矩阵 (L2距离) ──
-print(f'\n── 类间嵌入平均距离 (L2) ──')
+print('\n── 类间嵌入平均距离 (L2) ──')
 class_centers = {}
 for cls in all_merged:
     mask = np.array([l == cls for l in true_labels])
@@ -243,7 +248,7 @@ for c1 in cls_names:
     print()
 
 # ── 额外: 类内/类间距离比 (判断可分性) ──
-print(f'\n── 类内方差 / 最近类距离比 (越小越好) ──')
+print('\n── 类内方差 / 最近类距离比 (越小越好) ──')
 intra_var = {}
 for cls in all_merged:
     mask = np.array([l == cls for l in true_labels])

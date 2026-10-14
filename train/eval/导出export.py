@@ -10,17 +10,19 @@
 # 导出模型到 ONNX/TFLite（模型部署）
 """
 
-import os, sys, warnings, argparse
+import argparse
+import warnings
+
 warnings.filterwarnings('ignore')
 from pathlib import Path
+
 import torch
-import numpy as np
 
 # PKG_DIR = Path(__file__).parent  # 暂时不调用, 直接从命令行指定
 
 def export_embedding_mlp(model_dir: Path, output_path: Path, input_dim=768, num_classes=10):
     """导出 freeze 模式的 MLP 分类头 (embeddingMLP: 768→64→num_classes)"""
-    import torch.nn as nn
+    from torch import nn
 
     class EmbeddingMLP(nn.Module):
         def __init__(self, input_dim, num_classes, dropout=0.3):
@@ -52,8 +54,8 @@ def export_embedding_mlp(model_dir: Path, output_path: Path, input_dim=768, num_
 
 def export_finetune_model(model_dir: Path, output_path: Path):
     """导出 HuBERTForSequenceClassification 全模型"""
-    from transformers import HubertForSequenceClassification, Wav2Vec2Processor
     import torch
+    from transformers import HubertForSequenceClassification, Wav2Vec2Processor
 
     processor = Wav2Vec2Processor.from_pretrained(str(model_dir))
     model = HubertForSequenceClassification.from_pretrained(str(model_dir))
@@ -106,7 +108,7 @@ def main():
         print('\n⚠ TFLite 转换需要 onnx-tf 和 tensorflow')
         print('  手动运行:')
         print(f'    onnx-tf convert -i {output} -o {model_dir}/model_tf/')
-        print(f'    再用 TFLiteConverter 转 .tflite')
+        print('    再用 TFLiteConverter 转 .tflite')
 
 
 if __name__ == '__main__':

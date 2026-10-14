@@ -2,30 +2,33 @@
 CatSound_V2 各类别快速验证 — 每个类取一条非增强音频测推理
 # CatSound_V2 基础加载和标签验证脚本
 """
-import os, sys
+import os
+import sys
+
 os.environ['TRANSFORMERS_OFFLINE'] = '1'
 os.environ['HF_HUB_OFFLINE'] = '1'
 try: sys.stdout.reconfigure(encoding='utf-8')
 except: pass
 
+import time
 from pathlib import Path
+
+import joblib
+import librosa
 import numpy as np
 import torch
-import librosa
-import joblib
 from transformers import HubertModel, Wav2Vec2FeatureExtractor
-import time
 
 SR = 16000
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 LAYERS = [3, 4, 5]
 
-BASE = Path('C:/Users/陈项目负责人/Desktop')
+BASE = Path('C:/Users/chen/Desktop')
 MODEL_DIR = BASE / '模型代码/训练结果/hubert_v2/freeze_model_hubert_20260618_111717'
 DATA_DIR = BASE / 'CatSound_DataSet_V2/NAYA_DATA_AUG1X'
 
 # 加载模型
-print(f'[加载] HuBERT + SVM...')
+print('[加载] HuBERT + SVM...')
 t0 = time.time()
 data = joblib.load(str(MODEL_DIR / 'svm.pkl'))
 svm, scaler, le = data['svm'], data['scaler'], data['label_encoder']

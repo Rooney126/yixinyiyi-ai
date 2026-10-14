@@ -3,7 +3,9 @@
 输入3条视频 -> 三格并排 + 标题 + 白边框 + 轮流高亮 + 名字轮播 -> 8s片头
 用法: python make_lucky_draw.py
 """
-import os, subprocess
+import os
+import subprocess
+
 from PIL import Image, ImageDraw, ImageFont
 
 BASE = r"PROJECT_ROOT\app"

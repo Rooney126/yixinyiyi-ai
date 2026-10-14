@@ -9,9 +9,12 @@ r"""
 输出:  train/output/fdap_cnn_ch64_A_aug/model.tflite
 """
 
-import os, sys, torch
-import numpy as np
 import json
+import os
+import sys
+
+import numpy as np
+import torch
 
 # ── 添加模型定义所在目录到路径 ──────────────────────
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -52,6 +55,7 @@ for name, param in pt_model.named_parameters():
 # ── 在 TF 中重建等效模型 ────────────────────────────
 print("\n在 TensorFlow 中重建模型...")
 import tensorflow as tf
+
 tf.config.run_functions_eagerly(True)
 
 def fdap_fn(x):
@@ -160,6 +164,7 @@ print("\n导出 TFLite int8...")
 # 保存 SavedModel
 save_path = os.path.join(os.environ.get('TEMP', '.'), 'catcnn_savedmodel')
 import shutil
+
 if os.path.exists(save_path):
     shutil.rmtree(save_path)
 model.export(save_path)
@@ -217,4 +222,4 @@ with open(params_path, "w") as f:
     json.dump(params, f, indent=2)
 print(f"\n量化参数: {params_path}")
 print(f"  {params}")
-print(f"\n完成！")
+print("\n完成！")

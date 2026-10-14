@@ -4,20 +4,25 @@ Random Crop 实验: CatSound_V2 每文件随机取 2s → HuBERT freeze + SVM
 # 随机裁剪实验：测试不同音频时长对模型影响
 """
 
-import os, sys, time, warnings
+import os
+import sys
+import time
+import warnings
+
 warnings.filterwarnings('ignore')
 os.environ['TRANSFORMERS_OFFLINE'] = '1'
 os.environ['HF_HUB_OFFLINE'] = '1'
 try: sys.stdout.reconfigure(encoding='utf-8')
 except: pass
 
+from pathlib import Path
+
+import librosa
 import numpy as np
 import torch
-import librosa
-from pathlib import Path
+from sklearn.model_selection import GroupKFold
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.svm import LinearSVC
-from sklearn.model_selection import GroupKFold
 from transformers import HubertModel, Wav2Vec2FeatureExtractor
 
 SR = 16000
@@ -134,8 +139,8 @@ mean_acc = np.mean(fold_accs)
 std_acc = np.std(fold_accs)
 print(f'\n{"="*65}')
 print(f'  Random Crop 2s  SVM 5折 CV: {mean_acc:.1%} ± {std_acc:.1%}')
-print(f'  原文 (全文件)     SVM 5折 CV: 82.2% ± 1.3%')
-print(f'  事件分割          SVM 5折 CV: 72.5% ± 0.8%')
+print('  原文 (全文件)     SVM 5折 CV: 82.2% ± 1.3%')
+print('  事件分割          SVM 5折 CV: 72.5% ± 0.8%')
 print(f'{"="*65}')
 
 # ── 4. 用全量数据训练最终模型, 测新猫语 40 条 ──
@@ -152,7 +157,7 @@ MERGE_6 = {
 }
 
 print(f'\n{"="*65}')
-print(f'  测新猫语 40 条')
+print('  测新猫语 40 条')
 print(f'{"="*65}')
 
 # 全量训练
@@ -245,7 +250,7 @@ for i, pred in enumerate(pred_labels):
     if is_correct_10:
         per_class[true_10]['corr'] += 1
 
-print(f'\n  ─── 汇总 ───')
+print('\n  ─── 汇总 ───')
 print(f'  10类准确率: {correct_10}/{total_10} = {correct_10/total_10:.1%}')
 print(f'  6类合并:   {correct_6}/{total_6} = {correct_6/total_6:.1%}')
 for label, info in sorted(per_class.items()):
@@ -262,7 +267,7 @@ CN_MAP_163 = {
 }
 
 print(f'\n{"="*65}')
-print(f'  跨数据集: 原猫语分类 163 条')
+print('  跨数据集: 原猫语分类 163 条')
 print(f'{"="*65}')
 
 np.random.seed(42 + 888)  # 第三个 seed
@@ -331,4 +336,4 @@ for p, t in zip(cross_preds, cross_labels):
     if MERGE_6.get(p, p) == MERGE_6.get(t, t):
         correct_6 += 1
 print(f'  6类:  {correct_6}/{total} = {correct_6/total:.1%}')
-print(f'  (原始全文件模型: 10类=31.1%, 6类=41.5%)')
+print('  (原始全文件模型: 10类=31.1%, 6类=41.5%)')

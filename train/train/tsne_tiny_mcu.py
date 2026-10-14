@@ -16,7 +16,11 @@ Student 输入为 64×40 (由 128×80 按 2×2 平均降采样, 与 kd_tiny_mcu_
   PROJECT_ROOT\train\output\tsne_tiny_mcu_per_class.png
 """
 
-import os, sys, time, warnings
+import os
+import sys
+import time
+import warnings
+
 # 强制 UTF-8 输出 (Windows GBK 终端无法打印 emoji)
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8', errors='replace')
@@ -24,21 +28,23 @@ warnings.filterwarnings('ignore')
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 from pathlib import Path
-import numpy as np
+
 import matplotlib
+import numpy as np
+
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+
 # 中文字体修复
 plt.rcParams['font.sans-serif'] = ['Microsoft YaHei', 'SimHei', 'Arial Unicode MS']
 plt.rcParams['axes.unicode_minus'] = False
 import torch
-import torch.nn as nn
 from sklearn.preprocessing import LabelEncoder
+from torch import nn
 
 # ── 复用云端 t-SNE 脚本的预处理管线 ──
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from tsne_vadexp import (process_audio, load_file_list, LABELS,
-                         DATA_DIR, OUTPUT_DIR, DEVICE)
+from tsne_vadexp import DATA_DIR, DEVICE, OUTPUT_DIR, load_file_list, process_audio
 
 # 硬件模型 (kd 蒸馏 fold3, 与云端 fold3 对应)
 MODEL_PATH = Path(r'PROJECT_ROOT\train\output\kd_tiny_mcu\fold3_best.pth')
@@ -176,7 +182,7 @@ def main():
     print(f'  ✅ 总图: {out1}')
 
     print(f'\n{"=" * 50}')
-    print(f'  t-SNE 完成! 输出:')
+    print('  t-SNE 完成! 输出:')
     print(f'    {out1}')
     print(f'    {out2}')
     print(f'{"=" * 50}')

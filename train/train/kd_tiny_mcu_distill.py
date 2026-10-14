@@ -9,7 +9,14 @@ Student Mel = Teacher Mel 降采样 (128→64 bands × 80→40 frames)
 → 复用完整 seg_cache 缓存，不增加预处理负担
 """
 
-import os, sys, time, json, csv, warnings, hashlib
+import csv
+import hashlib
+import json
+import os
+import sys
+import time
+import warnings
+
 warnings.filterwarnings('ignore')
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 os.environ['PYTHONWARNINGS'] = 'ignore'
@@ -17,17 +24,18 @@ if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
 
 from pathlib import Path
-import numpy as np
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-from torch.utils.data import Dataset, DataLoader
-from sklearn.model_selection import GroupKFold
-from sklearn.preprocessing import LabelEncoder
-from sklearn.metrics import f1_score
-from sklearn.utils.class_weight import compute_class_weight
+
 import librosa
 import noisereduce as nr
+import numpy as np
+import torch
+import torch.nn.functional as F
+from sklearn.metrics import f1_score
+from sklearn.model_selection import GroupKFold
+from sklearn.preprocessing import LabelEncoder
+from sklearn.utils.class_weight import compute_class_weight
+from torch import nn
+from torch.utils.data import DataLoader, Dataset
 
 # ═══════════════════════════════════════
 #  配置
@@ -75,8 +83,7 @@ KD_ALPHA = 0.5            # α=1 全硬标签, α=0 全模仿教师
 #  路径
 # ═══════════════════════════════════════
 
-import platform
-_USER = '陈项目负责人'
+_USER = 'chen'
 
 BASE = Path(f'C:/Users/{_USER}/Desktop')
 DATA_DIR = BASE / 'CatSound_DataSet_V2/NAYA_DATA_AUG1X'
@@ -617,8 +624,8 @@ def train_kd_fold(fold, train_mels, train_labels, train_fidxs,
     """
     print(f'\n{"─" * 50}')
     print(f'折 {fold}: 训练 {len(train_mels)} 段 → 测试 {len(test_mels)} 段')
-    print(f'  Teacher: FDAP (128×80, 冻结)')
-    print(f'  Student: TinyMCU (32×40, 3Conv+GAP)')
+    print('  Teacher: FDAP (128×80, 冻结)')
+    print('  Student: TinyMCU (32×40, 3Conv+GAP)')
     print(f'  KD: T={KD_TEMPERATURE}, α={KD_ALPHA}')
     print(f'{"─" * 50}')
 
@@ -760,9 +767,9 @@ def train_kd_fold(fold, train_mels, train_labels, train_fidxs,
 
 def main():
     print(f'\n{"█" * 55}')
-    print(f'  知识蒸馏: FDAP Teacher → TinyMCU Student')
-    print(f'  Teacher: FDAP ch64 (70K) → Student: TinyMCU (3K)')
-    print(f'  Mel: 128×80 → 降采样(4,2) → 32×40')
+    print('  知识蒸馏: FDAP Teacher → TinyMCU Student')
+    print('  Teacher: FDAP ch64 (70K) → Student: TinyMCU (3K)')
+    print('  Mel: 128×80 → 降采样(4,2) → 32×40')
     print(f'  KD: α={KD_ALPHA}, T={KD_TEMPERATURE}')
     print(f'  输出: {OUTPUT_DIR}')
     print(f'{"█" * 55}')
@@ -771,7 +778,7 @@ def main():
     print('\n[0] 加载 Teacher 模型...')
     if not TEACHER_CKPT.exists():
         print(f'  ❌ Teacher 权重不存在: {TEACHER_CKPT}')
-        print(f'  请确认训练已运行: train_cnn_pipeline_v2_vadexp.py')
+        print('  请确认训练已运行: train_cnn_pipeline_v2_vadexp.py')
         return
     teacher = FDAPMobileCatCNN(num_classes=10).to(DEVICE)
     teacher.load_state_dict(torch.load(str(TEACHER_CKPT),
@@ -825,7 +832,7 @@ def main():
 
     # ── 结果 ──
     print(f'\n{"█" * 55}')
-    print(f'  结果: TinyMCU (知识蒸馏)')
+    print('  结果: TinyMCU (知识蒸馏)')
     print(f'{"█" * 55}')
     for i, (a, f) in enumerate(zip(fold_accs, fold_f1s), 1):
         print(f'  折{i}: Acc={a:.1%} F1={f:.1%}')
@@ -867,7 +874,7 @@ def main():
     with open(rp, 'w', encoding='utf-8') as f:
         json.dump(result, f, indent=2, ensure_ascii=False)
     print(f'\n结果: {rp}')
-    print(f'✅ 知识蒸馏完成')
+    print('✅ 知识蒸馏完成')
 
 
 if __name__ == '__main__':

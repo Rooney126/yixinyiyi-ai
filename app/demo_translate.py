@@ -6,7 +6,11 @@
   python demo_translate.py xxx.wav         # 翻译单个猫叫音频
   python demo_translate.py 目录路径/       # 批量翻译目录下所有 wav
 """
-import sys, os, glob, subprocess, tempfile
+import glob
+import os
+import subprocess
+import sys
+import tempfile
 
 # Windows 控制台统一 UTF-8 输出（配合 bat 里 chcp 65001，emoji/中文不乱码）
 if sys.platform == "win32":
@@ -17,10 +21,10 @@ if sys.platform == "win32":
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, BASE)
-import numpy as np
+import cloud_server as cs
 import librosa
 import noisereduce as nr
-import cloud_server as cs
+import numpy as np
 
 VIDEO_EXTS = {".mp4", ".mov", ".avi", ".mkv", ".webm", ".m4v", ".flv", ".wmv"}
 

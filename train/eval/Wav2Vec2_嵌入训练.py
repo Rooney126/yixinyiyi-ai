@@ -13,31 +13,34 @@
   [3] Baevski et al. (2020) — Wav2Vec2: 自监督语音表征
 """
 
-import os, json, pickle, warnings
+import json
+import os
+import pickle
+import warnings
+
 os.environ['JOBLIB_TEMP_FOLDER'] = 'C:/temp'
 os.makedirs('C:/temp', exist_ok=True)
 warnings.filterwarnings('ignore')
 
-from pathlib import Path
-from datetime import datetime
+import random
 from collections import defaultdict
+from datetime import datetime
+from pathlib import Path
 
+import librosa
 import numpy as np
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
-import random
-import librosa
-
-from sklearn.preprocessing import LabelEncoder, StandardScaler
-from sklearn.metrics import classification_report
-from sklearn.svm import SVC
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import GridSearchCV, GroupKFold
 from sklearn.decomposition import PCA
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import classification_report
+from sklearn.model_selection import GridSearchCV, GroupKFold
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.svm import SVC
+from torch import nn
 
 # Wav2Vec2
-from transformers import Wav2Vec2Processor, Wav2Vec2Model
+from transformers import Wav2Vec2Model, Wav2Vec2Processor
 
 # 随机种子 — 确保可复现
 random.seed(42)
@@ -45,15 +48,17 @@ np.random.seed(42)
 torch.manual_seed(42)
 
 # ── 路径 ──
-USER = os.environ.get('USERNAME', os.environ.get('USER', '陈项目负责人'))
+USER = os.environ.get('USERNAME', os.environ.get('USER', 'user'))
 EMOTION_DIR = Path(f'C:/Users/{USER}/Desktop/猫语分类/情绪分类')
 TIMBRE_DIR  = Path(f'C:/Users/{USER}/Desktop/猫语分类/音色分类')
 OUTPUT_DIR  = Path(f'C:/Users/{USER}/Desktop/猫语分类/模型代码/训练结果')
 TS = datetime.now().strftime('%Y%m%d_%H%M%S')
 
 # ── 全局参数 ──
+# 对齐目标长度：采样率 × 时长（2.0s）
 SR = 16000                      # Wav2Vec2 要求 16kHz
 DURATION = 2.0                   # 保留历史
+TARGET_LEN = int(SR * DURATION)  # 目标样本数
 K_FOLDS = 3
 WARMUP_EPOCHS = 10
 
@@ -629,7 +634,7 @@ def main():
         json.dump(results, f, ensure_ascii=False, indent=2)
 
     print(f'\n  保存路径: {OUTPUT_DIR}')
-    print(f'  结果: results_wav2vec2.json')
+    print('  结果: results_wav2vec2.json')
 
 
 if __name__ == '__main__':

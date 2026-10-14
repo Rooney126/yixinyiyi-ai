@@ -8,7 +8,12 @@
 # 事件分割实验 v2：检测猫叫声起始/结束位置
 """
 
-import os, sys, time, json, warnings
+import json
+import os
+import sys
+import time
+import warnings
+
 warnings.filterwarnings('ignore')
 os.environ['TRANSFORMERS_OFFLINE'] = '1'
 os.environ['HF_HUB_OFFLINE'] = '1'
@@ -16,14 +21,15 @@ try: sys.stdout.reconfigure(encoding='utf-8')
 except: pass
 
 from collections import Counter, defaultdict
+from pathlib import Path
+
+import joblib
+import librosa
 import numpy as np
 import torch
-import librosa
-import joblib
-from pathlib import Path
+from sklearn.model_selection import GroupKFold
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.svm import LinearSVC
-from sklearn.model_selection import GroupKFold
 from transformers import HubertModel, Wav2Vec2FeatureExtractor
 
 # ── 配置 ──
@@ -173,7 +179,7 @@ for fold, (tr, te) in enumerate(gkf.split(segments, y_seg, all_cats), 1):
 mean_acc_seg = np.mean(fold_accs)
 std_acc_seg = np.std(fold_accs)
 print(f'\n  事件分割 CV: {mean_acc_seg:.1%} ± {std_acc_seg:.1%}')
-print(f'  全文件 CV (参考): 82.2% ± 1.3%')
+print('  全文件 CV (参考): 82.2% ± 1.3%')
 print(f'  差异: {mean_acc_seg - 0.822:+.1%}')
 
 
@@ -226,12 +232,12 @@ for f in new_cat_files:
         'pred_10': pred_label, 'pred_6': pred_6,
     })
 
-print(f'\n  ── 全文件推理结果（10类 / 6类）──')
+print('\n  ── 全文件推理结果（10类 / 6类）──')
 for d in pred_details_file:
     print(f'    {d["file"][:40]:<42} 真={d["true"]:<8}  10类={d["pred_10"]:<12}  6类={d["pred_6"]}')
 
 # 按真实标签汇总预测分布
-print(f'\n  ── 按新猫语标签汇总预测分布 ──')
+print('\n  ── 按新猫语标签汇总预测分布 ──')
 for label in NEW_LABELS:
     items = [d for d in pred_details_file if d['true'] == label]
     if not items: continue
@@ -286,11 +292,11 @@ for f in new_cat_files:
         'votes_detail': vote_detail,
     })
 
-print(f'\n  ── 事件分割→投票结果（10类 / 6类）──')
+print('\n  ── 事件分割→投票结果（10类 / 6类）──')
 for d in pred_details_seg:
     print(f'    {d["file"][:35]:<37} 真={d["true"]:<8} 段={d["segments"]} 投10类={d["pred_10_vote"]:<12} 投6类={d["pred_6_vote"]}')
 
-print(f'\n  ── 按新猫语标签汇总投票分布 ──')
+print('\n  ── 按新猫语标签汇总投票分布 ──')
 for label in NEW_LABELS:
     items = [d for d in pred_details_seg if d['true'] == label]
     if not items: continue
@@ -305,13 +311,13 @@ for label in NEW_LABELS:
 # 汇总
 # =========================================================
 print(f'\n{"="*60}')
-print(f'  CatSound_V2 内部验证')
+print('  CatSound_V2 内部验证')
 print(f'{"="*60}')
-print(f'  全文件 CV (参考):        82.2% ± 1.3%')
+print('  全文件 CV (参考):        82.2% ± 1.3%')
 print(f'  事件分割 CV:              {mean_acc_seg:.1%} ± {std_acc_seg:.1%}')
 print(f'  → 差异: {mean_acc_seg-0.822:+.1%}')
-print(f'')
-print(f'  新猫语 40 条预测分布已输出，标签映射由项目负责人判断')
+print('')
+print('  新猫语 40 条预测分布已输出，标签映射需人工判断')
 
 result = {
     'catv2_seg_cv_mean': mean_acc_seg, 'catv2_seg_cv_std': std_acc_seg,

@@ -4,23 +4,28 @@ t-SNE 参数探索: perplexity × LAYERS
 # t-SNE 参数探索：perplexity × 层组合 网格图
 """
 
-import os, sys, warnings
+import os
+import sys
+import warnings
+
 warnings.filterwarnings('ignore')
-os.environ['HF_HOME'] = '/mnt/c/Users/陈项目负责人/.cache/huggingface'
+os.environ['HF_HOME'] = '/.cache/huggingface'
 os.environ['TRANSFORMERS_OFFLINE'] = '1'
 try: sys.stdout.reconfigure(encoding='utf-8')
 except: pass
 
 from collections import Counter
+from datetime import datetime
+from pathlib import Path
+
+import librosa
+import matplotlib
 import numpy as np
 import torch
-import librosa
-from pathlib import Path
-from datetime import datetime
-from sklearn.manifold import TSNE
 from sklearn.decomposition import PCA
+from sklearn.manifold import TSNE
 from transformers import HubertModel, Wav2Vec2FeatureExtractor
-import matplotlib
+
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
@@ -31,7 +36,7 @@ DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 SEED = 42
 np.random.seed(SEED)
 
-BASE = Path('/mnt/c/Users/陈项目负责人/Desktop')
+BASE = Path('/Desktop')
 DATA_DIR = BASE / 'CatSound_DataSet_V2/NAYA_DATA_AUG1X'
 TS = datetime.now().strftime('%Y%m%d_%H%M%S')
 OUTPUT = BASE / f'模型代码/t-SNE_grid_{TS}.png'

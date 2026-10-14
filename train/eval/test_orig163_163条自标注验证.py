@@ -1,24 +1,27 @@
 # 163条自标注数据 -> 模型准确性验证
 """6类模型在原猫语分类163条上的验证"""
-import os, sys
+import os
+import sys
+
 os.environ['TRANSFORMERS_OFFLINE'] = '1'
 os.environ['HF_HUB_OFFLINE'] = '1'
 try: sys.stdout.reconfigure(encoding='utf-8')
 except: pass
 
+import time
+from collections import Counter
 from pathlib import Path
+
+import joblib
+import librosa
 import numpy as np
 import torch
-import librosa
-import joblib
-from collections import Counter
 from transformers import HubertModel, Wav2Vec2FeatureExtractor
-import time
 
 SR = 16000; DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 LAYERS = [3, 4, 5]
 
-BASE = Path('C:/Users/陈项目负责人/Desktop')
+BASE = Path('C:/Users/chen/Desktop')
 MODEL_DIR = BASE / '模型代码/训练结果/hubert_v2/freeze_model_hubert_20260618_152123'
 
 # 加载模型
@@ -71,7 +74,7 @@ MERGE_6 = {
 }
 
 DATA_DIR = BASE / '原猫语分类/情绪分类'
-print(f'\n═══ 原猫语分类 163条验证 ═══\n')
+print('\n═══ 原猫语分类 163条验证 ═══\n')
 
 total_correct = 0
 total_samples = 0
@@ -101,5 +104,5 @@ for cn_dir, en_label in CN_MAP.items():
     emoji = '✅' if acc >= 0.5 else '❌'
     print(f'  {emoji} {merged_expected:<12} ({en_label:<12}) {correct}/{len(files)}={acc:.0%}  {pred_detail}')
 
-print(f'\n  ─────────────────────────')
+print('\n  ─────────────────────────')
 print(f'  总正确率: {total_correct}/{total_samples} = {total_correct/total_samples:.1%}')

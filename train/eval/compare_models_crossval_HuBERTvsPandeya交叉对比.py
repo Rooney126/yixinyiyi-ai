@@ -4,7 +4,11 @@
 # 模型交叉对比：HuBERT+SVM vs Pandeya model_best 官方权重
 """
 
-import os, sys, json, re, warnings
+import json
+import os
+import sys
+import warnings
+
 warnings.filterwarnings('ignore')
 os.environ['TRANSFORMERS_OFFLINE'] = '1'
 os.environ['HF_HUB_OFFLINE'] = '1'
@@ -12,11 +16,11 @@ try: sys.stdout.reconfigure(encoding='utf-8')
 except: pass
 
 from pathlib import Path
-from collections import Counter
-import numpy as np
+
 import joblib
-import torch
 import librosa
+import numpy as np
+import torch
 from transformers import HubertModel, Wav2Vec2FeatureExtractor
 
 # ── 路径 ──
@@ -75,6 +79,7 @@ t1 = __import__('time').time()
 import tensorflow as tf
 from tensorflow.keras import layers, models
 
+
 def build_pandeya_model(input_shape=(None, 96, 1), num_classes=10):
     """重建 Pandeya CNN + Kapre melgram"""
     try:
@@ -132,7 +137,7 @@ try:
     print(f'  ✅ 直接加载 hdf5 成功 ({__import__("time").time()-t1:.1f}s)')
 except Exception as e:
     print(f'  ⚠️ 直接加载失败: {e}')
-    print(f'  → 尝试重建架构加载权重')
+    print('  → 尝试重建架构加载权重')
     try:
         pandeya_model = build_pandeya_model()
         pandeya_model.load_weights(str(MODEL_PATH))
@@ -247,6 +252,7 @@ print(f'{"═"*60}')
 
 # 按用户类别统计一致性
 from collections import defaultdict
+
 agree_by_cn = defaultdict(lambda: {'agree': 0, 'total': 0})
 for r in results:
     c = r['cn_label']

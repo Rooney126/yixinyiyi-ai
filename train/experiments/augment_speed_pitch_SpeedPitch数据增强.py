@@ -8,14 +8,20 @@ Speed/Pitch 数据增强 — Pandeya论文原始方法
 用法: python3 augment_speed_pitch.py
 输出: Desktop/模型代码/训练结果/aug_sp/ 目录下的 .npy 文件
 """
-import os, sys, csv, hashlib, warnings, time
+import csv
+import hashlib
+import os
+import sys
+import time
+import warnings
+
 warnings.filterwarnings('ignore')
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 sys.stdout.reconfigure(encoding='utf-8')
 from pathlib import Path
-import numpy as np
+
 import librosa
-import torch
+import numpy as np
 
 SR = 16000
 N_MELS = 128
@@ -24,7 +30,7 @@ HOP_LENGTH = 256
 VAD_FRAMES = 100
 VAD_TOP_DB = 25
 
-BASE = Path('/mnt/c/Users/陈项目负责人/Desktop')
+BASE = Path('/Desktop')
 DATA_DIR = BASE / 'CatSound_DataSet_V2/NAYA_DATA_AUG1X'
 CACHE_DIR = BASE / '模型代码/训练结果/aug_sp_cache'
 CACHE_DIR.mkdir(parents=True, exist_ok=True)

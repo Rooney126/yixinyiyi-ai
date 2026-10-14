@@ -4,21 +4,25 @@
 # 事件分割实验：叫声/非叫声二分类切割
 """
 
-import os, sys, time, json, warnings
+import os
+import sys
+import time
+import warnings
+
 warnings.filterwarnings('ignore')
 os.environ['TRANSFORMERS_OFFLINE'] = '1'
 os.environ['HF_HUB_OFFLINE'] = '1'
 try: sys.stdout.reconfigure(encoding='utf-8')
 except: pass
 
+from pathlib import Path
+
+import librosa
 import numpy as np
 import torch
-import librosa
-import joblib
-from pathlib import Path
+from sklearn.model_selection import GroupKFold
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.svm import LinearSVC
-from sklearn.model_selection import GroupKFold
 from transformers import HubertModel, Wav2Vec2FeatureExtractor
 
 SR = 16000
@@ -81,7 +85,7 @@ print(f'  无声/失败文件: {zero_files}')
 
 # 段长分布分析
 seg_durations = np.array([len(s['waveform']) / SR for s in segments])
-print(f'\n  段长分析:')
+print('\n  段长分析:')
 print(f'    平均: {seg_durations.mean():.2f}s, 中位数: {np.median(seg_durations):.2f}s')
 print(f'    最短: {seg_durations.min():.2f}s, 最长: {seg_durations.max():.2f}s')
 print(f'    <0.3s: {(seg_durations < 0.3).sum()}, <0.5s: {(seg_durations < 0.5).sum()}')
@@ -148,5 +152,5 @@ for fold, (tr, te) in enumerate(gkf.split(segments, y, all_cats), 1):
 mean_acc = np.mean(fold_accs)
 std_acc = np.std(fold_accs)
 print(f'\n  事件分割 SVM 5折 CV: {mean_acc:.1%} ± {std_acc:.1%}')
-print(f'  原文 (全文件) SVM 5折 CV: 82.2% ± 1.3%')
+print('  原文 (全文件) SVM 5折 CV: 82.2% ± 1.3%')
 print(f'  差异: {mean_acc - 0.822:+.1%}')

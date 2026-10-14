@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 """分段分析：输出每段猫叫的时间戳+独立翻译结果"""
-import sys, os
+import sys
+
 if sys.platform == "win32":
     try: sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     except Exception: pass
-import numpy as np
-import librosa
 import cloud_server as cs
+import librosa
+import numpy as np
+
 
 def softmax(x):
     e = np.exp(x - x.max(axis=1, keepdims=True))

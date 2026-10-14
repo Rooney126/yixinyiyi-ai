@@ -3,20 +3,33 @@
 新管线: 11步预处理 + 多段加权投票
 双击 run.bat 启动，手机浏览器打开即用
 """
-import os, sys, json, warnings, tempfile, time, sqlite3, hashlib, uuid, shutil
+import hashlib
+import json
+import os
+import shutil
+import sqlite3
+import sys
+import tempfile
+import time
+import uuid
+import warnings
+
 try: sys.stdout.reconfigure(encoding='utf-8')
 except: pass
 from pathlib import Path
+
 warnings.filterwarnings('ignore')
 
-import numpy as np
+import logging
+from functools import wraps
+
 import librosa
 import noisereduce as nr
+import numpy as np
 import torch
-import torch.nn as nn
-from flask import Flask, request, jsonify, send_from_directory, make_response
-from functools import wraps
-import logging
+from flask import Flask, jsonify, request, send_from_directory
+from torch import nn
+
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
 
@@ -199,7 +212,7 @@ def load_model():
     binary_pth = BASE.parent / "models" / "minicat_binary.pt"
     if not binary_pth.exists():
         print(f"  ❌ 未找到门卫模型: {binary_pth}")
-        print(f"     无门卫则无法区分猫声/人声，服务终止。")
+        print("     无门卫则无法区分猫声/人声，服务终止。")
         sys.exit(1)
     state = torch.load(str(binary_pth), map_location=DEVICE, weights_only=True)
     binary_model.load_state_dict(state)
@@ -811,10 +824,10 @@ if __name__ == "__main__":
     use_ssl = cert.exists() and key.exists()
 
     print("  🐱 译芯怡意 App v2 — 新管线 11步 + 多段投票")
-    print(f"  模型: A_aug 折3 (87.9% F1, σ=0.7%)")
-    print(f"  原文案 v3 已更新: 10类情绪新文案")
-    print(f"  实时访问: https://your-server.example")
-    print(f"  停止: 关闭此窗口即停止服务")
+    print("  模型: A_aug 折3 (87.9% F1, σ=0.7%)")
+    print("  原文案 v3 已更新: 10类情绪新文案")
+    print("  实时访问: https://your-server.example")
+    print("  停止: 关闭此窗口即停止服务")
 
     print("  初始化数据库...")
     init_db()

@@ -2,22 +2,25 @@
 CNN 跨数据集测试: 38 新猫语 + 163 原猫语
 用 fold4_best.pth (F1=84.1%), 同 VAD+1.6s 预处理
 """
-import os, sys, warnings
+import os
+import sys
+import warnings
+
 warnings.filterwarnings('ignore')
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 sys.stdout.reconfigure(encoding='utf-8')
+from collections import defaultdict
 from pathlib import Path
-from collections import Counter, defaultdict
+
+import librosa
 import numpy as np
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import librosa
+from torch import nn
 
 SR=16000; N_MELS=128; N_FFT=512; HOP_LENGTH=256; VAD_FRAMES=100; VAD_TOP_DB=25
 DEVICE='cuda' if torch.cuda.is_available() else 'cpu'
 
-BASE=Path('/mnt/c/Users/陈项目负责人/Desktop')
+BASE=Path('/Desktop')
 MODEL_PATH=BASE/'模型代码/训练结果/fdap_cnn_v3/fold4_best.pth'
 NEW_CAT_DIR=BASE/'新猫语分类/新情绪分类'
 ORIG163_DIR=BASE/'原猫语分类/情绪分类'
@@ -86,7 +89,7 @@ def eval_dataset(model, data_dir, label_map, name):
         res_10[gt10]['t']+=1;res_10[gt10]['c']+=p10==gt10;res_10[gt10]['ps'].append(p10)
         res_6[gt6]['t']+=1;res_6[gt6]['c']+=p6==gt6;res_6[gt6]['ps'].append(p6)
     
-    print(f'\n--- 10类 ---')
+    print('\n--- 10类 ---')
     tc,ta=0,0
     for l in sorted(res_10):
         r=res_10[l];a=r['c']/r['t'] if r['t']>0 else 0
@@ -94,7 +97,7 @@ def eval_dataset(model, data_dir, label_map, name):
         print(f'  {l:12s}  {r["c"]:2d}/{r["t"]:2d}={a:.1%}')
     print(f'  总体: {tc}/{ta}={tc/ta:.1%}')
     
-    print(f'\n--- 6类 ---')
+    print('\n--- 6类 ---')
     tc,ta=0,0
     for l in ['Aggressive','Happy','Mating','MotherCall','Paining','Resting']:
         if l not in res_6: continue

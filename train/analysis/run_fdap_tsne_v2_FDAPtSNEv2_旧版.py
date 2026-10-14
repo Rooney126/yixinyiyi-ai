@@ -3,7 +3,11 @@ FDAP t-SNE v2: 修复性能 + 缓存 + 归一化问题
 # FDAP t-SNE v2（旧版，已废弃）
 """
 
-import os, sys, warnings, json
+import json
+import os
+import sys
+import warnings
+
 warnings.filterwarnings('ignore')
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 os.environ['TRANSFORMERS_OFFLINE'] = '1'
@@ -11,13 +15,15 @@ try: sys.stdout.reconfigure(encoding='utf-8')
 except: pass
 
 from collections import Counter
-from pathlib import Path
 from datetime import datetime
-import numpy as np
+from pathlib import Path
+
 import librosa
-from sklearn.manifold import TSNE
-from sklearn.decomposition import PCA
 import matplotlib
+import numpy as np
+from sklearn.decomposition import PCA
+from sklearn.manifold import TSNE
+
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
@@ -36,7 +42,7 @@ MODEL_PATH = BASE / 'CatSound_DataSet_V2/NAYA_DATA_AUG1X/model_best.hdf5'
 TS = datetime.now().strftime('%Y%m%d_%H%M%S')
 CACHE_DIR = BASE / '模型代码/fdap_cache'
 CACHE_DIR.mkdir(parents=True, exist_ok=True)
-CACHE_KEY = f'fdap_feats_v2_fixedsr'  # 若输入参数变了就改这个
+CACHE_KEY = 'fdap_feats_v2_fixedsr'  # 若输入参数变了就改这个
 OUTPUT_PNG = BASE / f'模型代码/t-SNE_FDAP_v2_{TS}.png'
 OUTPUT_JSON = BASE / f'模型代码/t-SNE_FDAP_metrics_{TS}.json'
 
@@ -108,6 +114,7 @@ else:
         inp = layers.Input(shape=(None, N_MELS, 1))
         # 手动归一化 → 不需要 Normalization 层
         blocks = []
+        x = None  # 首轮用 inp，后续轮用上一轮输出
         for pool_size in [(2,4),(3,4),(2,5),(2,4),(4,4)]:
             x = layers.Conv2D(32, (3,3), padding='same')(x if blocks else inp)
             x = layers.BatchNormalization()(x)
@@ -129,7 +136,7 @@ else:
                 full.get_layer(f'batch_normalization_{i}').get_weights())
         weights_loaded = True
         del full
-        print(f'  ✅ 加载 model_best.hdf5 权重')
+        print('  ✅ 加载 model_best.hdf5 权重')
     except Exception as e:
         print(f'  ⚠️ 加载失败 ({e}), 随机权重')
 
@@ -203,7 +210,7 @@ fig, axes = plt.subplots(1, 2, figsize=(14, 6))
 
 for ax, feats, title in [
     (axes[0], fdap_feats, f'FDAP ({sum(FDAP_SEGMENTS)}频段×均值+标准差)'),
-    (axes[1], gap_feats, f'GAP (全局均值)')
+    (axes[1], gap_feats, 'GAP (全局均值)')
 ]:
     X = pca50.fit_transform(feats)
     coords = TSNE(n_components=2, perplexity=PERP, random_state=SEED).fit_transform(X)
@@ -238,7 +245,7 @@ y_int = le.fit_transform(labels_all)
 
 fdap_sil = silhouette_score(fdap_feats, y_int)
 gap_sil = silhouette_score(gap_feats, y_int)
-print(f'  轮廓系数 (越高越好):')
+print('  轮廓系数 (越高越好):')
 print(f'    FDAP: {fdap_sil:.4f}')
 print(f'    GAP:  {gap_sil:.4f}')
 

@@ -14,15 +14,20 @@ r"""
   pip install tensorflow onnx onnx2tf
 """
 
-import os, sys, json, warnings
+import json
+import os
+import sys
+import warnings
+
 warnings.filterwarnings('ignore')
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'  # TFLite导出走CPU
 
 from pathlib import Path
+
 import numpy as np
 import torch
-import torch.nn as nn
+from torch import nn
 
 # ═══════════════════════════════════════
 #  配置
@@ -85,9 +90,9 @@ class TinyMCUCatCNN(nn.Module):
 # ═══════════════════════════════════════
 
 print(f'\n{"█" * 55}')
-print(f'  导出 TinyMCUCatCNN → TFLite int8')
+print('  导出 TinyMCUCatCNN → TFLite int8')
 print(f'  Fold: {FOLD}')
-print(f'  Input: 32×40 Mel (1ch)')
+print('  Input: 32×40 Mel (1ch)')
 print(f'  Output: 10类 ({len(LABELS)})')
 print(f'{"█" * 55}\n')
 
@@ -95,7 +100,7 @@ print(f'{"█" * 55}\n')
 print(f'[1] 加载折 {FOLD} 权重...')
 if not CKPT_PATH.exists():
     print(f'  ❌ 权重不存在: {CKPT_PATH}')
-    print(f'  可用的折:')
+    print('  可用的折:')
     for f in sorted(OUTPUT_DIR.glob('fold*_best.pth')):
         print(f'    {f.name}')
     sys.exit(1)
@@ -110,7 +115,7 @@ n_params = sum(p.numel() for p in model.parameters())
 print(f'  参数量: {n_params:,}')
 
 # ── 2. 测试推理 ──
-print(f'\n[2] 测试推理 (随机输入)...')
+print('\n[2] 测试推理 (随机输入)...')
 dummy = torch.randn(1, 1, 64, 40).to(DEVICE)
 with torch.no_grad():
     logits = model(dummy)
@@ -120,7 +125,7 @@ with torch.no_grad():
     print(f'  随机输入 → 类 {pred} ({LABELS[pred]}) 置信度 {conf:.4f}')
 
 # ── 3. ONNX 导出 ──
-print(f'\n[3] 导出 ONNX...')
+print('\n[3] 导出 ONNX...')
 ONNX_PATH = OUTPUT_DIR / 'student_model.onnx'
 torch.onnx.export(
     model,
@@ -134,7 +139,7 @@ torch.onnx.export(
 print(f'  ONNX: {ONNX_PATH} ({ONNX_PATH.stat().st_size//1024}KB)')
 
 # ── 4. TFLite int8 导出 (Keras 手动重建) ──
-print(f'\n[4] 导出 TFLite int8...')
+print('\n[4] 导出 TFLite int8...')
 try:
     import tensorflow as tf
 except ImportError:
@@ -235,7 +240,7 @@ except Exception as e:
     print(f'  ✅ TFLite FP16: {TFLITE_PATH} ({len(tflite_model)//1024}KB)')
 
 # ── 5. 验证 ──
-print(f'\n[5] 验证 TFLite 推理精度...')
+print('\n[5] 验证 TFLite 推理精度...')
 interpreter = tf.lite.Interpreter(model_content=tflite_model)
 interpreter.allocate_tensors()
 input_details = interpreter.get_input_details()
@@ -278,7 +283,7 @@ print(f'  PT vs TFLite 最大概率差异: {max_diff:.6f}')
 print(f'  {"✅ 验证通过" if max_diff < 0.1 else "⚠️ 差异较大，请检查量化参数"}')
 
 # ── 6. 导出 C 数组 ──
-print(f'\n[6] 导出 C 数组 (用于 T5 固件)...')
+print('\n[6] 导出 C 数组 (用于 T5 固件)...')
 with open(str(TFLITE_PATH), 'rb') as f:
     model_bytes = f.read()
 
@@ -317,7 +322,7 @@ with open(str(C_ARRAY_PATH), 'w', encoding='utf-8') as f:
 print(f'  C 数组: {C_ARRAY_PATH} ({n_bytes} bytes)')
 
 # ── 7. 保存参数 JSON ──
-print(f'\n[7] 保存参数...')
+print('\n[7] 保存参数...')
 params = {
     'model': 'TinyMCUCatCNN',
     'fold': FOLD,
@@ -340,14 +345,14 @@ print(f'  参数: {PARAMS_PATH}')
 
 # ── 汇总 ──
 print(f'\n{"=" * 55}')
-print(f'  导出完成!')
+print('  导出完成!')
 print(f'  TFLite:  {TFLITE_PATH} ({n_bytes//1024}KB)')
 print(f'  C 数组:  {C_ARRAY_PATH}')
 print(f'  参数:    {PARAMS_PATH}')
 print(f'  验证:    {"✅ PT vs TFLite 差异 < 0.1" if max_diff < 0.1 else "⚠️ 差异较大"}')
-print(f'  ~~~~ 后续步骤 ~~~~')
+print('  ~~~~ 后续步骤 ~~~~')
 print(f'  1. T5 固件: 将 {C_ARRAY_PATH.name} 加入项目')
-print(f'  2. 预处理 32×40 Mel (与 vadexp 管线一致)')
-print(f'  3. TFLite Micro 加载 g_student_model_tflite')
-print(f'  4. 预期 arena: <50KB, 推理: ~50ms')
+print('  2. 预处理 32×40 Mel (与 vadexp 管线一致)')
+print('  3. TFLite Micro 加载 g_student_model_tflite')
+print('  4. 预期 arena: <50KB, 推理: ~50ms')
 print(f'{"=" * 55}')

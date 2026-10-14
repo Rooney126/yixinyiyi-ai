@@ -4,25 +4,29 @@
 目标: DepthwiseConv2D + GAP, arena <50KB, 推理 <100ms @M33F
 """
 
-import os, sys, time, json, warnings, hashlib, struct
+import json
+import time
+import warnings
+
 warnings.filterwarnings('ignore')
 from pathlib import Path
-import numpy as np
 
-# ── Torch ──
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-from torch.utils.data import Dataset, DataLoader
+import numpy as np
 
 # ── TFLite ──
 import tensorflow as tf
 
+# ── Torch ──
+import torch
+import torch.nn.functional as F
+from sklearn.metrics import f1_score
+from sklearn.model_selection import GroupKFold
+
 # ── sklearn ──
 from sklearn.preprocessing import LabelEncoder
-from sklearn.model_selection import GroupKFold
-from sklearn.metrics import f1_score
 from sklearn.utils.class_weight import compute_class_weight
+from torch import nn
+from torch.utils.data import DataLoader, Dataset
 
 # ═══════════════════════════════════════════
 #  配置
@@ -285,8 +289,8 @@ def export_tflite(model, output_path='tiny_mcu_catcnn'):
     h_path = OUTPUT_DIR / f'{output_path}_data.h'
     with open(c_path, 'w') as f:
         f.write(f'#include "{output_path}_data.h"\\n\\n')
-        f.write(f'__attribute__((aligned(16))) const unsigned char '
-                f'g_tiny_mcu_model_data[] = {{\\n')
+        f.write('__attribute__((aligned(16))) const unsigned char '
+                'g_tiny_mcu_model_data[] = {\\n')
         for i in range(0, len(tflite_model), 16):
             chunk = tflite_model[i:i+16]
             hex_str = ', '.join(f'0x{b:02x}' for b in chunk)
@@ -295,12 +299,12 @@ def export_tflite(model, output_path='tiny_mcu_catcnn'):
         f.write(f'const unsigned int g_tiny_mcu_model_data_size = '
                 f'{len(tflite_model)};\\n')
     with open(h_path, 'w') as f:
-        f.write(f'#ifndef TINY_MCU_CATCNN_MODEL_DATA_H_\\n')
-        f.write(f'#define TINY_MCU_CATCNN_MODEL_DATA_H_\\n\\n')
-        f.write(f'#include <stdint.h>\\n\\n')
-        f.write(f'extern const unsigned int g_tiny_mcu_model_data_size;\\n')
-        f.write(f'extern const unsigned char g_tiny_mcu_model_data_data[];\\n\\n')
-        f.write(f'#endif /* TINY_MCU_CATCNN_MODEL_DATA_H_ */\\n')
+        f.write('#ifndef TINY_MCU_CATCNN_MODEL_DATA_H_\\n')
+        f.write('#define TINY_MCU_CATCNN_MODEL_DATA_H_\\n\\n')
+        f.write('#include <stdint.h>\\n\\n')
+        f.write('extern const unsigned int g_tiny_mcu_model_data_size;\\n')
+        f.write('extern const unsigned char g_tiny_mcu_model_data_data[];\\n\\n')
+        f.write('#endif /* TINY_MCU_CATCNN_MODEL_DATA_H_ */\\n')
     print(f'  C数组: {c_path}')
     return tflite_path
 
@@ -317,10 +321,10 @@ def _rep_dataset():
 
 def main():
     print(f'\\n{"█" * 50}')
-    print(f'  MCU 轻量猫语模型')
+    print('  MCU 轻量猫语模型')
     print(f'  Mel: {N_MELS}×{MEL_FRAMES}')
-    print(f'  MAC: ~500K (参考)')
-    print(f'  Arena: <50KB')
+    print('  MAC: ~500K (参考)')
+    print('  Arena: <50KB')
     print(f'  设备: {DEVICE}')
     print(f'{"█" * 50}')
 
@@ -357,7 +361,7 @@ def main():
 
     # ── 结果 ──
     print(f'\\n{"█" * 50}')
-    print(f'  结果 (TinyMCU)')
+    print('  结果 (TinyMCU)')
     print(f'{"█" * 50}')
     for i, (a, f_) in enumerate(zip(fold_accs, fold_f1s), 1):
         print(f'  折{i}: Acc={a:.1%} F1={f_:.1%}')
