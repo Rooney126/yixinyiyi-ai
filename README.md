@@ -46,6 +46,20 @@ python app/server.py
 cd app && python -m pytest tests/
 ```
 
+## 技术路线（怎么走到这里的）
+
+没有一步到位，前面弃掉的路线比留下的多：
+
+1. 起步：Pandeya 公开数据集 100 条复现 CNN，扩到自己标注 163 条
+2. 经典 ML 基线：RF、SVM，再到 CNN+SVM+RF 集成（GPU 对照实验留在 train/eval/GPU训练_CNN+SVM+RF.py）
+3. 标签体系换到 6 类又弃用，最终定 10 类
+4. SSL 路线：Wav2Vec2 嵌入 + MLP/SVM/RF → AVES 嵌入（加 440 条 Ntalampiras 场景数据，数据集扩到 5900 条）→ HuBERT/WavLM 对比池化方式、选聚类层数、freeze/finetune 都跑了
+5. HuBERT 线卡在情绪分类（800 行代码后弃用），转向自定义 CNN 读谱路线：FDAP（分频带平均池化）vs GAP 的 t-SNE 对比定案，FDAP 胜出
+6. VAD 首尾静音切分 + 固定窗口切段，多段投票出结果
+7. 蒸馏：FDAP 教师 → MCU 尺寸学生（logit-level KD）
+
+弃掉的实验脚本都留在 train/analysis、train/experiments、train/eval 里（t-SNE 对比图见 docs/screenshots/tsne_10class.png），命名就是演进史。
+
 ## 一些记录
 
 - 门卫模型（二分类）在服务端先过滤猫/非猫，避免人声杂音白跑 10 类模型；蒸馏到 MCU 下沉到设备的训练代码在 train/train/
